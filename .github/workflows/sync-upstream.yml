@@ -1,0 +1,39 @@
+name: Sync com o upstream
+
+on:
+  schedule:
+    # De hora em hora, fora do minuto 0, para não cair no pico do Actions.
+    - cron: "17 * * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: sync-upstream
+  cancel-in-progress: false
+
+jobs:
+  sync:
+    name: Atualizar main a partir do original
+    runs-on: ubuntu-latest
+    steps:
+      - name: Sincronizar main com Rede-ENois/enois-frontend
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -euo pipefail
+          response="$(gh api --method POST \
+            -H "Accept: application/vnd.github+json" \
+            "/repos/${GITHUB_REPOSITORY}/merge-upstream" \
+            -f branch=main)"
+          merge_type="$(printf '%s' "$response" | jq -r '.merge_type')"
+          echo "merge_type=${merge_type}"
+          case "$merge_type" in
+            fast-forward|merge|none) ;;
+            *)
+              echo "Resposta inesperada da sincronização:"
+              printf '%s\n' "$response"
+              exit 1
+              ;;
+          esac
