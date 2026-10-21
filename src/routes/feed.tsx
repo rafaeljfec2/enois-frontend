@@ -57,6 +57,8 @@ import { HtmlEditor } from "@/components/html-editor";
 import { InfiniteScroll } from "@/components/infinite-scroll";
 import { LinkedInSyncPrompt } from "@/components/linkedin-sync-prompt";
 import { MentionTextarea } from "@/components/mention-textarea";
+import { NightRestReminder } from "@/components/night-rest-reminder";
+import { PlatformSpacesCard } from "@/components/platform-spaces-card";
 import { PostCard } from "@/components/post-card";
 import { UserAvatar } from "@/components/user-avatar";
 
@@ -325,6 +327,7 @@ function Home() {
     if (pageMode ? !pageHtml.trim() : !content) return;
     if (articleMode && !articleBody.trim()) return;
 
+    const formData = new FormData(event.currentTarget);
     setPublishError(null);
     try {
       let mediaIds: string[] = [];
@@ -340,6 +343,7 @@ function Home() {
         ...(articleMode ? { articleBody } : {}),
         mentionedUserIds: pageMode ? [] : mentionedUserIds,
         ...(topic ? { topic } : {}),
+        website: String(formData.get("website") ?? ""),
       });
       // "Também no LinkedIn": com o LinkedIn vinculado, oferece o compartilhamento pelo
       // diálogo oficial do LinkedIn com o link público do post (o OG preview completa o resto).
@@ -446,6 +450,8 @@ function Home() {
 
   return (
     <AppContainer>
+      <NightRestReminder />
+
       {/* Pergunta única ao voltar do vínculo com o LinkedIn (flag gravada pelo diálogo de contas). */}
       <LinkedInSyncPrompt />
 
@@ -456,6 +462,15 @@ function Home() {
             onSubmit={publishPost}
             className="rounded-2xl border border-border-soft bg-surface-card p-4 sm:p-5"
           >
+            <input
+              type="text"
+              name="website"
+              tabIndex={-1}
+              autoComplete="off"
+              aria-hidden="true"
+              className="hidden"
+            />
+
             <div className="flex items-start gap-3">
               <UserAvatar
                 frame={profileUser?.avatarFrame}
@@ -914,6 +929,8 @@ function Home() {
         <ApoieCard />
 
         <aside className="sticky top-20 hidden max-h-[calc(100vh-6rem)] space-y-4 overflow-y-auto lg:block">
+          <PlatformSpacesCard />
+
           {profileUser && (
             <div className="overflow-hidden rounded-2xl border border-border-soft bg-surface-card">
               <div className="h-14" style={{ background: "var(--gradient-primary)" }} />
