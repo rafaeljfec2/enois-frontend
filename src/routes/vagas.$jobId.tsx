@@ -190,7 +190,9 @@ function JobDetail() {
               </div>
 
               <div className="min-w-0 flex-1">
-                <h1 className="min-w-0 break-words text-xl font-semibold tracking-tight">{job.title}</h1>
+                <h1 className="min-w-0 break-words text-xl font-semibold tracking-tight">
+                  {job.title}
+                </h1>
 
                 <p className="mt-0.5 text-sm text-text-subtle">
                   {job.company}
@@ -262,9 +264,9 @@ function JobDetail() {
                 {job.level}
               </span>
 
-              {formatSalary(job.salary, job.currency) && (
+              {(job.salaryLabel || formatSalary(job.salary, job.currency)) && (
                 <span className="rounded-full border border-border-soft px-2.5 py-1">
-                  {formatSalary(job.salary, job.currency)}
+                  {job.salaryLabel ?? formatSalary(job.salary, job.currency)}
                 </span>
               )}
             </div>

@@ -1,5 +1,6 @@
 import type { RequestOptions } from "@/types/application/api/request-options";
 
+import { notifyBirthDateRequired, notifyParentalConsentRequired } from "./age-required";
 import { resetSessionScopedData } from "./query-client";
 import { dropSessionKey } from "./session-key";
 
@@ -284,6 +285,15 @@ async function request<T>(
         "É necessário entrar para ver isso.",
         path,
       );
+    }
+    // Escrever (postar, comentar, mensagem) exige a data de nascimento declarada: em vez de só
+    // mostrar o erro, o app abre o diálogo de regularização em qualquer tela.
+    if (errorBody?.code === "BIRTH_DATE_REQUIRED") {
+      notifyBirthDateRequired();
+    }
+    // Menor sem autorizacao do responsavel: abre a tela de supervisao em qualquer acao bloqueada.
+    if (errorBody?.code === "PARENTAL_CONSENT_REQUIRED") {
+      notifyParentalConsentRequired();
     }
     throw new ApiError(
       response.status,

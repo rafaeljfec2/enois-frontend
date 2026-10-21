@@ -2,14 +2,15 @@ import { useState } from "react";
 
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 
-import { JOB_LEVELS, JOB_LOCATIONS, JOB_TYPES } from "@/constants/job-options";
+import { JOB_LEVELS, JOB_LOCATIONS, JOB_TYPES, SALARY_PERIODS } from "@/constants/job-options";
 import { texts } from "@/texts";
+import type { CurrencyCode } from "@/types/application/currency/currency-code";
 import type { CreateJobInput } from "@/types/application/job/create-job-input";
 import type { Job } from "@/types/application/job/job";
 import type { JobEditDialogProps } from "@/types/components/job/job-edit-dialog-props";
 
 import { jobsApi } from "@/lib/api";
-import { CURRENCIES, type CurrencyCode, currencySymbol } from "@/lib/currency";
+import { CURRENCIES, currencySymbol } from "@/lib/currency";
 import { cn } from "@/lib/utils";
 
 import { Button } from "@/components/ui/button";
@@ -90,14 +91,20 @@ function EditForm({
   const [location, setLocation] = useState(job.location);
   const [type, setType] = useState(job.type);
   const [level, setLevel] = useState(job.level);
-  const [salary, setSalary] = useState(job.salary ?? "");
+  const [salaryMin, setSalaryMin] = useState(job.salaryMin ?? "");
+  const [salaryMax, setSalaryMax] = useState(job.salaryMax ?? "");
+  const [salaryPeriod, setSalaryPeriod] = useState(job.salaryPeriod ?? "MONTH");
   const [currency, setCurrency] = useState<CurrencyCode>(
     (job.currency as CurrencyCode | null) ?? "BRL",
   );
   const [skills, setSkills] = useState(job.skills.join(", "));
   const [description, setDescription] = useState(job.description ?? "");
 
-  const valid = title.trim() !== "" && company.trim() !== "";
+  const valid =
+    title.trim() !== "" &&
+    company.trim() !== "" &&
+    description.trim() !== "" &&
+    salaryMin.trim() !== "";
 
   return (
     <div className="space-y-4 pt-2">
@@ -108,9 +115,7 @@ function EditForm({
       </div>
 
       <div className="space-y-1.5">
-        <Label className="text-xs font-normal text-text-subtle">
-          {texts.jobs.fields.company}
-        </Label>
+        <Label className="text-xs font-normal text-text-subtle">{texts.jobs.fields.company}</Label>
 
         <Input value={company} onChange={(e) => setCompany(e.target.value)} className="bg-muted" />
       </div>
@@ -135,9 +140,7 @@ function EditForm({
         </div>
 
         <div className="space-y-1.5">
-          <Label className="text-xs font-normal text-text-subtle">
-            {texts.jobs.fields.type}
-          </Label>
+          <Label className="text-xs font-normal text-text-subtle">{texts.jobs.fields.type}</Label>
 
           <select value={type} onChange={(e) => setType(e.target.value)} className={SELECT_CLASS}>
             {JOB_TYPES.map((t) => (
@@ -149,9 +152,7 @@ function EditForm({
         </div>
 
         <div className="space-y-1.5">
-          <Label className="text-xs font-normal text-text-subtle">
-            {texts.jobs.fields.level}
-          </Label>
+          <Label className="text-xs font-normal text-text-subtle">{texts.jobs.fields.level}</Label>
 
           <select value={level} onChange={(e) => setLevel(e.target.value)} className={SELECT_CLASS}>
             {JOB_LEVELS.map((l) => (
@@ -165,7 +166,7 @@ function EditForm({
 
       <div className="space-y-1.5">
         <Label className="text-xs font-normal text-text-subtle">
-          {texts.jobs.fields.salary}
+          {texts.jobs.fields.salaryMin}
         </Label>
 
         <div className="flex gap-2">
@@ -183,22 +184,55 @@ function EditForm({
           </select>
 
           <Input
-            value={salary}
-            onChange={(e) => setSalary(e.target.value)}
-            placeholder={texts.jobs.fields.salaryPlaceholder}
+            value={salaryMin}
+            onChange={(e) => setSalaryMin(e.target.value)}
+            placeholder={texts.jobs.fields.salaryMinPlaceholder}
+            inputMode="decimal"
             className="bg-muted"
           />
         </div>
 
         <p className="text-xs font-normal text-text-subtle">
-          {texts.jobs.fields.salaryHint(currencySymbol(currency))}
+          {texts.jobs.fields.salaryMinHint(currencySymbol(currency))}
         </p>
       </div>
 
+      <div className="grid gap-3 sm:grid-cols-2">
+        <div className="space-y-1.5">
+          <Label className="text-xs font-normal text-text-subtle">
+            {texts.jobs.fields.salaryMax}
+          </Label>
+
+          <Input
+            value={salaryMax}
+            onChange={(e) => setSalaryMax(e.target.value)}
+            placeholder={texts.jobs.fields.salaryMaxPlaceholder}
+            inputMode="decimal"
+            className="bg-muted"
+          />
+        </div>
+
+        <div className="space-y-1.5">
+          <Label className="text-xs font-normal text-text-subtle">
+            {texts.jobs.fields.salaryPeriod}
+          </Label>
+
+          <select
+            value={salaryPeriod}
+            onChange={(e) => setSalaryPeriod(e.target.value)}
+            className={SELECT_CLASS}
+          >
+            {SALARY_PERIODS.map((p) => (
+              <option key={p.value} value={p.value}>
+                {p.label}
+              </option>
+            ))}
+          </select>
+        </div>
+      </div>
+
       <div className="space-y-1.5">
-        <Label className="text-xs font-normal text-text-subtle">
-          {texts.jobs.fields.skills}
-        </Label>
+        <Label className="text-xs font-normal text-text-subtle">{texts.jobs.fields.skills}</Label>
 
         <Input
           value={skills}
@@ -238,13 +272,15 @@ function EditForm({
             location,
             type,
             level,
-            salary: salary.trim() || undefined,
+            salaryMin: salaryMin.trim(),
+            salaryMax: salaryMax.trim() || undefined,
+            salaryPeriod,
+            description: description.trim(),
             currency,
             skills: skills
               .split(",")
               .map((s) => s.trim())
               .filter(Boolean),
-            description: description.trim() || undefined,
             // Reenviados como estao: o PUT substitui a lista, entao omiti-los apagaria o formulario.
             applicationFields: (job.applicationFields ?? []).map((field) => ({
               label: field.label,

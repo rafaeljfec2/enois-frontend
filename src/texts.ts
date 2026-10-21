@@ -344,8 +344,14 @@ export const texts = {
         { value: "640", label: "Comunidades" },
       ],
     },
+    signupClosed: {
+      title: "Cadastros fechados no momento",
+      description:
+        "A criação de contas está pausada. Quem já tem conta entra normalmente; se você ainda não participa, acompanhe as novidades por aqui.",
+    },
     fields: {
       fullName: "Nome completo",
+      birthDate: "Data de nascimento",
       email: "E-mail",
       password: "Senha",
       newPassword: "Nova senha",
@@ -361,6 +367,8 @@ export const texts = {
       loginPasswordMin: "A senha precisa ter ao menos 6 caracteres",
       signupNameMin: "Como podemos te chamar?",
       passwordMin: "Use ao menos 8 caracteres",
+      birthDateRequired: "Informe a data de nascimento.",
+      birthDateFuture: "A data de nascimento não pode estar no futuro.",
       termsRequired: "É preciso confirmar que você tem 18 anos ou mais e aceitar os termos.",
     },
     password: {
@@ -373,6 +381,13 @@ export const texts = {
       authDescription: "Acesse sua conta ou comece sua jornada profissional na Énóis.",
       resetTitle: "Redefinir senha · Énóis",
       resetDescription: "Defina uma nova senha para sua conta na Énóis.",
+    },
+    captcha: {
+      label: "Verificação de segurança",
+      loading: "Carregando a pergunta...",
+      placeholder: "Resposta",
+      refresh: "Trocar pergunta",
+      required: "Resolva a verificação de segurança para criar a conta.",
     },
     signup: {
       title: "Vamos começar.",
@@ -415,10 +430,10 @@ export const texts = {
     pending: {
       title: "Confirme seu e-mail",
       description: (email: string) =>
-        `Enviamos um link de confirmação para ${email}. A conta é ativada quando você abrir o link.`,
+        `Enviamos um link de confirmação para ${email}. Sua conta só é criada depois que você abrir o link.`,
       step1: "O link vale por 24 horas e só pode ser usado uma vez.",
       step2: "Confira a caixa de spam se não encontrar em alguns minutos.",
-      step3: "O acesso às funcionalidades libera assim que o e-mail for confirmado.",
+      step3: "A conta nasce (e o acesso libera) assim que o e-mail for confirmado.",
       resend: "Reenviar o link",
       sending: "Enviando...",
       sent: "Link reenviado. Confira seu e-mail.",
@@ -747,6 +762,7 @@ export const texts = {
       sanctions: "Penalidades",
       linkedAccounts: "Contas vinculadas",
       healthyUsage: "Uso saudável",
+      guardian: "Supervisão parental",
       security: "Segurança e verificação",
       apoie: "Apoie o Énóis",
       deleteAccount: "Excluir conta",
@@ -1006,6 +1022,14 @@ export const texts = {
       existingAccount: "Já tenho conta",
       finePrint: "Sem cartão de crédito · Sem anúncios · Sem plano premium",
     },
+    securityNote: {
+      eyebrow: "Aviso a quem testa segurança",
+      title: "Testem na sandbox, não contra a nossa API.",
+      body: "Pedimos, por favor, que os testes de segurança sejam realizados em ambiente de sandbox, e não contra a nossa API. Temos os repositórios abertos — tudo é 100% open source — e damos autorização apenas para testes realizados em ambiente simulado. Todo teste executado contra a nossa API será encarado como crime cibernético e denunciado como tal.",
+      closing:
+        "Somos uma rede social sem fins lucrativos que quer ser melhor junto da comunidade. Pedimos que não tentem destruir ideias livres e gratuitas que apenas querem trazer o bem.",
+      repoLink: "Ver os repositórios abertos",
+    },
     footer: {
       copyright: (year: number) =>
         `© ${year} Énóis · Uma rede feita com as pessoas, todos os dias.`,
@@ -1057,6 +1081,8 @@ export const texts = {
     empty: "Nada por aqui ainda. Publicações da sua rede aparecem neste feed.",
     composer: {
       topic: "Assunto",
+      insertInText: "Inserir no texto",
+      insertMedia: (number: number) => `Inserir mídia ${number} no texto`,
       topicNone: "Sem assunto",
       topicHint: "Liga o post ao que a gente quer ver (ou não quer) na personalização.",
       schedule: "Agendar",
@@ -1326,6 +1352,7 @@ export const texts = {
       viewProfile: (name: string) => `Abrir o perfil de ${name}`,
       attachMedia: "Anexar imagem",
       removeMedia: "Remover mídia",
+      insertInText: "Inserir no texto",
       gif: "GIF",
       gifTitle: "Adicionar GIF",
       gifHint: "Cole o link do Giphy ou Tenor — ele aparece como GIF no comentário.",
@@ -1525,6 +1552,7 @@ export const texts = {
     avatarFallback: "Avatar",
     edit: {
       usernameTaken: "Este username já está em uso",
+      birthDateInvalid: "Informe uma data de nascimento válida — é preciso ter 18 anos ou mais.",
       showRanking: "Mostrar o ranking no perfil",
       showRankingHint:
         "Desligue para não ver a seção de ranking (quem está chegando agora) ao abrir um perfil.",
@@ -1544,6 +1572,7 @@ export const texts = {
         bio: "Bio",
         company: "Empresa",
         location: "Localização",
+        birthDate: "Data de nascimento",
         availability: "Disponibilidade",
         portfolio: "Portfólio",
         externalLinks: "Links externos (um por linha)",
@@ -1797,6 +1826,9 @@ export const texts = {
       mobileHint: "No celular, use Tela cheia (ou gire o aparelho) para jogar com mais espaço.",
       openAtOrigin: "Abrir no site do criador",
       loading: "Carregando o jogo…",
+      /** O quadro não avisa quando o site recusa incorporação: a pessoa decide tentar de novo. */
+      blocked:
+        "O jogo não abriu aqui. O site do criador pode não permitir ser exibido dentro de outra página — abra na origem para jogar.",
       retry: "Tentar de novo",
       player: {
         loadingProgress: (progress: number) => `Carregando o jogo… ${progress}%`,
@@ -1819,6 +1851,10 @@ export const texts = {
       favorites: (count: number) => `${count} na biblioteca`,
       share: "Compartilhar",
       shareCopied: "Link do jogo copiado!",
+      stats: (plays: number, players: number) =>
+        plays === 1
+          ? "1 sessão"
+          : `${plays} sessões · ${players} ${players === 1 ? "pessoa jogou" : "pessoas jogaram"}`,
       plays: (count: number) =>
         `${count} ${count === 1 ? "partida iniciada" : "partidas iniciadas"}`,
       players: (count: number) => `${count} ${count === 1 ? "jogador" : "jogadores"}`,
@@ -2141,7 +2177,10 @@ export const texts = {
     applicationsCount: (count: number) =>
       `${count} candidatura${count === 1 ? "" : "s"} recebida${count === 1 ? "" : "s"}`,
     deleteJob: "Excluir vaga",
-    deleteConfirm: "Excluir esta vaga? As candidaturas recebidas também são removidas.",
+    abandonWarning: (count: number) =>
+      `Vaga excluída com ${count} candidato(s) sem resposta. Isso reduz a sua credibilidade.`,
+    deleteConfirm:
+      "Excluir esta vaga? As candidaturas recebidas também são removidas. Se houver candidatos sem resposta, excluir reduz a sua credibilidade.",
     myJobs: "Minhas vagas",
     myApplications: "Minhas candidaturas",
     myJobsEmpty: "Você ainda não publicou vagas.",
@@ -2760,6 +2799,42 @@ export const texts = {
       applications: "Candidaturas",
       users: "Usuários",
       emails: "E-mails",
+      suspicious: "Suspeitos",
+    },
+    suspicious: {
+      title: "Contas suspeitas",
+      description:
+        "Contas recentes com sinais de cadastro em série: nome repetido ou de teste, e-mail não confirmado, perfil vazio e denúncias contra. Revise e selecione o que banir — o lote não apaga conteúdo, só aplica o banimento pelo fluxo normal.",
+      empty: "Nenhuma conta suspeita no período.",
+      emptyHint:
+        "Os sinais avaliados são nome em série, e-mail não confirmado, perfil vazio e denúncias.",
+      selectAll: "Selecionar todas",
+      clear: "Limpar seleção",
+      selected: (count: number) => `${count} selecionada(s)`,
+      reasonPlaceholder: "Motivo do banimento (mínimo de 10 caracteres)",
+      typeBan: "Banir",
+      typePermanent: "Banir permanentemente",
+      ban: (count: number) => (count === 0 ? "Banir selecionadas" : `Banir ${count} conta(s)`),
+      confirmTitle: "Banir em lote",
+      confirmBody: (count: number, type: "BAN" | "PERMABAN") =>
+        `Aplicar ${type === "PERMABAN" ? "banimento permanente" : "banimento"} em ${count} conta(s)? As sessões serão revogadas e o login bloqueado.`,
+      confirm: "Banir agora",
+      result: (banned: number, already: number, failed: number) =>
+        `${banned} banida(s), ${already} já estavam banidas, ${failed} falha(s).`,
+      error: "Não foi possível banir as contas selecionadas.",
+      risk: (score: number) => `risco ${score}`,
+      createdAt: (date: string) => `criada em ${date}`,
+      counts: (posts: number, comments: number, reports: number) =>
+        `${posts} post(s) · ${comments} comentário(s) · ${reports} denúncia(s) contra`,
+      signals: {
+        NOME_SUSPEITO: "Nome em série",
+        NOME_REPETIDO: "Nome repetido",
+        EMAIL_NAO_VERIFICADO: "E-mail não confirmado",
+        SEM_CONTEUDO: "Sem conteúdo",
+        PERFIL_VAZIO: "Perfil vazio",
+        CONTA_NOVA: "Conta nova",
+        DENUNCIAS_CONTRA: "Denúncias contra",
+      } as Record<string, string>,
     },
     games: {
       title: "Jogos esperando revisão",
@@ -2901,6 +2976,69 @@ export const texts = {
     jobsCount: (n: number) => (n === 1 ? "1 vaga aberta" : `${n} vagas abertas`),
     viewJobs: "Ver vagas",
     empty: "Nenhuma empresa encontrada.",
+  },
+  /** Diálogo global de regularização da data de nascimento (ECA Digital). */
+  /** Diálogo global de regularização da data de nascimento (ECA Digital). */
+  ageGate: {
+    title: "Confirme sua data de nascimento",
+    description:
+      "A plataforma exige a data de nascimento para publicar, comentar e enviar mensagens. Ela fica guardada com a sua conta e não aparece para outras pessoas.",
+    label: "Data de nascimento",
+    confirm: "Confirmar e continuar",
+    later: "Agora não",
+    saved: "Data de nascimento registrada. Você já pode publicar.",
+    savedMinor:
+      "Data registrada. Agora falta a autorização de um responsável para liberar a conta.",
+    invalid: "Confira a data: ela não pode estar no futuro.",
+    error: "Não foi possível salvar a data. Tente de novo.",
+  },
+  /** Área do responsável legal (ECA Digital). */
+  guardian: {
+    title: "Supervisão parental",
+    subtitle: "Autorize ou acompanhe o uso do Énóis por um adolescente sob sua responsabilidade.",
+    loginRequired:
+      "Entre com a sua conta de adulto para responder ao convite e acompanhar os perfis supervisionados.",
+    accepted:
+      "Autorização registrada. A conta do adolescente já pode publicar, comentar e enviar mensagens.",
+    rejected: "Convite recusado. A conta do adolescente continua somente leitura.",
+    inviteTitle: "Pedido de autorização",
+    inviteBody:
+      "Um adolescente indicou você como responsável legal no Énóis. Aceitar autoriza o uso da rede por ele, com as proteções para menores de 18 anos.",
+    bullet1: "Você pode revogar a autorização a qualquer momento.",
+    bullet2: "Você não recebe acesso às conversas privadas nem à senha do adolescente.",
+    bullet3: "A data de nascimento dele não fica pública.",
+    accept: "Autorizar uso",
+    reject: "Recusar",
+    mineTitle: "Perfis que eu supervisiono",
+    loading: "Carregando...",
+    none: "Nenhum perfil supervisionado por esta conta.",
+    since: (date: string) => `autorizado em ${date}`,
+    revoke: "Revogar",
+    revoked: "Autorização revogada. A conta voltou ao modo somente leitura.",
+    error: "Não foi possível concluir agora. Tente de novo.",
+    footer:
+      "A autorização parental é registrada com data e versão dos termos. O Énóis não trata a declaração de idade como verificação oficial.",
+  },
+  /** Supervisão parental: menor sem responsável autorizado (ECA Digital). */
+  parentalGate: {
+    title: "Conta de adolescente protegida",
+    description:
+      "Sua conta é de menor de 18 anos. Para publicar, comentar e enviar mensagens, um responsável legal precisa autorizar o uso da rede.",
+    howItWorks:
+      "Envie o convite para o e-mail do seu responsável. Ele precisa entrar no Énóis com uma conta de adulto e aceitar o convite. Até lá, a conta fica somente leitura.",
+    emailLabel: "E-mail do responsável",
+    invite: "Enviar convite",
+    inviting: "Enviando...",
+    sent: "Convite enviado ao seu responsável.",
+    emailFailed: "Não conseguimos enviar o e-mail agora. Tente novamente em instantes.",
+    sentFor: (email: string) => `Convite enviado para ${email}.`,
+    waiting:
+      "Quando o responsável aceitar, a conta é liberada. Se ele já aceitou, verifique de novo.",
+    checkAgain: "Verificar de novo",
+    checking: "Verificando...",
+    later: "Agora não",
+    invalidEmail: "Informe um e-mail válido.",
+    error: "Não foi possível enviar o convite. Tente de novo.",
   },
   exportTheme: "Exportar tema",
   importTheme: "Importar tema",

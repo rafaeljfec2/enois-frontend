@@ -12,7 +12,9 @@ import { api, buildQuery } from "../api-client";
 export const feedApi = {
   /** Feed corporativo: só o que as identidades profissionais assinam. */
   corporate: (cursor?: string | null, limit = 20) =>
-    api.get<PageResponse<PostView>>(`/feed/corporate${buildQuery({ cursor: cursor ?? undefined, limit })}`),
+    api.get<PageResponse<PostView>>(
+      `/feed/corporate${buildQuery({ cursor: cursor ?? undefined, limit })}`,
+    ),
 
   /** Página pública de um perfil profissional: só as publicações BUSINESS daquele @. */
   corporateByUsername: (username: string, cursor?: string | null, limit = 20) =>
@@ -69,6 +71,8 @@ export const feedApi = {
     mediaIds?: string[];
     mentionedUserIds?: string[];
     communityId?: string;
+    /** Assunto do post avulso (viaja com o agendado; em comunidade o post herda o dela). */
+    topic?: string;
     scheduledAt: string;
   }) => api.post<ScheduledPostView>("/feed/scheduled", data),
 
