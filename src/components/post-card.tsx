@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Link } from "@tanstack/react-router";
 
+import { TOPIC_LABELS } from "@/constants/community-topics";
 import { postContentLimit } from "@/constants/post-content-limits";
 import { PAGE_HTML_MAX_LENGTH } from "@/constants/post-page";
 import { POST_SEALS, postSeal } from "@/constants/post-seals";
@@ -26,7 +27,6 @@ import {
 import { communitiesApi, feedApi } from "@/lib/api";
 import { sealsApi } from "@/lib/api/seals";
 import { saveFeedScroll } from "@/lib/feed-scroll-restoration";
-
 import { inlineMediaIds } from "@/lib/rich-text/inline-media";
 import { hideExternalPageUrls } from "@/lib/shared-links";
 import { useAuth } from "@/lib/use-auth";
@@ -76,11 +76,10 @@ export function PostCard({
   // Só corta em lista: na página do post o texto inteiro é o conteúdo da página.
   const isCompact = !fullPost && post.content.length > POST_COMPACT_THRESHOLD;
   const [showComments, setShowComments] = useState(fullPost);
-  // Selos do post: vem em lote do backend (aqui e um post so; a listagem pode pedir varios de uma vez).
+  // Selos do post: `forPost` junta os cards da página numa chamada só ao lote do backend.
   const { data: seals } = useQuery({
     queryKey: ["seals", post.id],
-    queryFn: () =>
-      sealsApi.forPosts([post.id]).then((all) => all[post.id] ?? { seals: [], mySeals: [] }),
+    queryFn: () => sealsApi.forPost(post.id),
     staleTime: 60_000,
   });
   // Cada selo alterna sozinho: o backend tira quando já existe, então não há "troca" nem remoção
@@ -290,6 +289,16 @@ export function PostCard({
             {meta.label}
           </span>
 
+          {/* O assunto (categoria) do post fica ao lado do tipo, quando o autor classificou. */}
+          {post.topic && (
+            <span
+              className="inline-flex items-center rounded-full border border-border-soft px-2.5 py-1 text-xs font-medium text-text-subtle"
+              title={texts.feed.composer.topic}
+            >
+              {TOPIC_LABELS[post.topic as keyof typeof TOPIC_LABELS] ?? post.topic}
+            </span>
+          )}
+
           {post.type === "MOMENT" && post.expiresAt && (
             <span
               className="inline-flex items-center gap-1 rounded-full border border-amber-500/40 px-2 py-1 text-xs font-normal text-amber-600 dark:text-amber-400"
@@ -460,7 +469,7 @@ export function PostCard({
         </p>
       ) : null}
 
-      <ReactionsSummary postId={post.id} />
+      <ReactionsSummary postId={post.id} initialSummary={post.reactionSummary} />
       <LinkPreviews content={post.content} autoplay />
 
       {post.tags.length > 0 && (

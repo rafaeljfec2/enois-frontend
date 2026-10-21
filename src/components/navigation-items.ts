@@ -6,8 +6,10 @@ import {
   Building2,
   Calendar,
   Compass,
+  FolderKanban,
   Gamepad2,
   GraduationCap,
+  Handshake,
   Home,
   Joystick,
   MessageCircle,
@@ -41,6 +43,7 @@ export const navigationItems: {
   { to: "/salvos", label: texts.navigation.items.saved, icon: Bookmark, module: null },
   { to: "/blogs", label: texts.navigation.items.blogs, icon: BookOpen, module: "BLOGS" },
   { to: "/vagas", label: texts.navigation.items.jobs, icon: Briefcase, module: "JOBS" },
+  { to: "/freelances", label: "Freelances", icon: Handshake, module: "JOBS" },
   {
     to: "/empresas",
     label: texts.navigation.items.companies,
@@ -55,6 +58,12 @@ export const navigationItems: {
   },
   { to: "/eventos", label: texts.navigation.items.events, icon: Calendar, module: "EVENTS" },
   { to: "/jogos-diarios", label: "Jogos diários", icon: Gamepad2, module: "DAILY_GAMES" },
-  { to: "/games", label: "Projetos da comunidade", icon: Joystick, module: "COMMUNITY_GAMES" },
+  { to: "/games", label: "Jogos da comunidade", icon: Joystick, module: "COMMUNITY_GAMES" },
+  {
+    to: "/projetos",
+    label: "Projetos da comunidade",
+    icon: FolderKanban,
+    module: "COMMUNITY_PROJECTS",
+  },
   { to: "/marketplace", label: "Marketplace", icon: ShoppingBag, module: null },
 ];

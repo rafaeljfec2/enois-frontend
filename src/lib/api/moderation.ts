@@ -1,4 +1,5 @@
 import type { BulkBanResult } from "@/types/application/moderation/bulk-ban-result";
+import type { BulkDeletePostsResult } from "@/types/application/moderation/bulk-delete-posts-result";
 import type { EmailLogView } from "@/types/application/moderation/email-log-view";
 import type { GameReviewView } from "@/types/application/moderation/game-review-view";
 import type { ModeratorApplicationView } from "@/types/application/moderation/moderator-application-view";
@@ -8,11 +9,10 @@ import type { ModeratorSanctionResult } from "@/types/application/moderation/mod
 import type { ModeratorVoteResult } from "@/types/application/moderation/moderator-vote-result";
 import type { SanctionProposalDecision } from "@/types/application/moderation/sanction-proposal-decision";
 import type { SanctionProposalView } from "@/types/application/moderation/sanction-proposal-view";
-import type {
-  BulkDeletePostsResult,
-  SuspiciousPostView,
-} from "@/types/application/moderation/suspicious-post-view";
-import type { SuspiciousUsersView } from "@/types/application/moderation/suspicious-user-view";
+import type { SuspiciousPostView } from "@/types/application/moderation/suspicious-post-view";
+// A lista de suspeitos mora no arquivo dela (um tipo por arquivo, regra do repo); o main
+// importava daqui um tipo que nao existe neste arquivo.
+import type { SuspiciousUsersView } from "@/types/application/moderation/suspicious-users-view";
 
 import { api } from "../api-client";
 

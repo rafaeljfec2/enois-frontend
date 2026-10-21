@@ -3,15 +3,17 @@ import { type ChangeEvent, type FormEvent, useEffect, useRef, useState } from "r
 import { useInfiniteQuery, useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Link, createFileRoute } from "@tanstack/react-router";
 
+import { REACTION_EMOJIS } from "@/constants/reaction-emojis";
 import { texts } from "@/texts";
+import type { ReactionType } from "@/types/application/reaction/reaction-type";
 import type { MediaItem } from "@/types/routes/feed/media-item";
 import type { ConversationHeaderProps } from "@/types/routes/messages/conversation-header-props";
 import type { ConversationItemProps } from "@/types/routes/messages/conversation-item-props";
 import type { SendMessageInput } from "@/types/routes/messages/send-message-input";
-import { ArrowLeft, Image as ImageIcon, Search, Send, X } from "lucide-react";
+import { ArrowLeft, Image as ImageIcon, Search, Send, Smile, X } from "lucide-react";
 
 import { messagesApi, networkApi, profileApi } from "@/lib/api";
-import { getCurrentUserId } from "@/lib/current-user";
+import { useCurrentUser } from "@/lib/current-user";
 import { requireAuth } from "@/lib/require-auth";
 import { insertSnippet } from "@/lib/rich-text/insert-snippet";
 import { useMediaUpload } from "@/lib/use-media-upload";
@@ -24,6 +26,7 @@ import { useToast } from "@/components/ui/toast";
 
 import { AppContainer } from "@/components/app-container";
 import { MediaGrid } from "@/components/post/media-grid";
+import { ReactionPicker } from "@/components/post/reaction-picker";
 import { RichText } from "@/components/post/rich-text";
 import { UserAvatar } from "@/components/user-avatar";
 import { UserBadges } from "@/components/user-badge";
@@ -40,7 +43,10 @@ export const Route = createFileRoute("/mensagens")({
 
 function Mensagens() {
   const { conversation } = Route.useSearch();
-  const currentUserId = getCurrentUserId();
+  // Inscrito na query do /me: quando a resposta chega, a tela redesenha com o id certo (sem
+  // isso, a busca de "outro participante" ficava com o id de quem esta olhando).
+  const { data: currentUser } = useCurrentUser();
+  const currentUserId = currentUser?.id ?? null;
   const queryClient = useQueryClient();
   const { toast } = useToast();
   const upload = useMediaUpload();
@@ -130,9 +136,13 @@ function Mensagens() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["messages", activeConversation?.id] });
       queryClient.invalidateQueries({ queryKey: ["conversations"] });
-      setText("");
-      setMedia([]);
     },
+  });
+
+  const reactToMessage = useMutation({
+    mutationFn: ({ messageId, type }: { messageId: string; type: string }) =>
+      messagesApi.react(activeConversation!.id, messageId, type),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["messages", activeConversation?.id] }),
   });
 
   const createConversation = useMutation({
@@ -197,9 +207,12 @@ function Mensagens() {
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
-    if (!activeConversation) return;
+    if (!activeConversation || sendMessage.isPending) return;
     const content = text.trim();
     if (!content && media.length === 0) return;
+    // Limpa na hora para evitar reenvio se Enter disparar duas vezes antes do onSuccess.
+    setText("");
+    setMedia([]);
     setUploadError(null);
     try {
       let mediaIds: string[] = [];
@@ -611,6 +624,50 @@ function Mensagens() {
                             >
                               {formatTime(m.time)}
                             </p>
+
+                            {/* Reações: mesmos emojis dos comentários. A pílula alterna a reação e
+                                o botão abre o seletor completo. */}
+                            <div
+                              className={`mt-1 flex flex-wrap items-center gap-1 ${
+                                isMe ? "justify-end" : "justify-start"
+                              }`}
+                              onClick={(event) => event.stopPropagation()}
+                            >
+                              {Object.entries(m.reactions ?? {}).map(([type, count]) => (
+                                <button
+                                  key={type}
+                                  type="button"
+                                  onClick={() => reactToMessage.mutate({ messageId: m.id, type })}
+                                  className={`inline-flex h-6 items-center gap-1 rounded-full px-1.5 text-xs leading-none transition ${
+                                    m.myReaction === type
+                                      ? "bg-primary/20 text-primary-text ring-1 ring-primary/40"
+                                      : isMe
+                                        ? "bg-primary-foreground/15 text-primary-foreground"
+                                        : "bg-muted text-text-subtle hover:bg-muted/80"
+                                  }`}
+                                  title={type.toLowerCase()}
+                                >
+                                  <span className="inline-flex h-4 items-center justify-center text-sm leading-none">
+                                    {REACTION_EMOJIS[type as ReactionType] ?? type}
+                                  </span>
+
+                                  <span className="tabular-nums leading-none">{count}</span>
+                                </button>
+                              ))}
+
+                              <ReactionPicker
+                                activeType={(m.myReaction as ReactionType) ?? null}
+                                onReact={(type) => reactToMessage.mutate({ messageId: m.id, type })}
+                                buttonClassName={`inline-flex h-6 w-6 items-center justify-center rounded-full transition ${
+                                  isMe
+                                    ? "text-primary-foreground/70 hover:bg-primary-foreground/15"
+                                    : "text-text-subtle hover:bg-muted"
+                                }`}
+                                buttonTitle={texts.posts.reactions.react}
+                              >
+                                <Smile className="h-3.5 w-3.5" />
+                              </ReactionPicker>
+                            </div>
                           </div>
                         </div>
                       );
@@ -764,7 +821,8 @@ function ConversationItem({
   selected,
   onToggle,
 }: ConversationItemProps) {
-  const currentUserId = getCurrentUserId();
+  const { data: currentUser } = useCurrentUser();
+  const currentUserId = currentUser?.id ?? null;
   const otherId = conversation.participantIds.find((id) => id !== currentUserId);
   const { data: otherUser } = useQuery({
     queryKey: ["profile", "by-id", otherId],
@@ -826,7 +884,8 @@ function ConversationItem({
 }
 
 function ConversationHeader({ conversation, onBack, action }: ConversationHeaderProps) {
-  const currentUserId = getCurrentUserId();
+  const { data: currentUser } = useCurrentUser();
+  const currentUserId = currentUser?.id ?? null;
   const otherId = conversation.participantIds.find((id) => id !== currentUserId);
   const { data: otherUser } = useQuery({
     queryKey: ["profile", "by-id", otherId],

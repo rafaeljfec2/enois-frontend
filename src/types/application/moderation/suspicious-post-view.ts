@@ -6,8 +6,3 @@ export type SuspiciousPostView = {
   /** JSON da pré-triagem: { signals: string[], score: number }. */
   signals: string;
 };
-
-export type BulkDeletePostsResult = {
-  total: number;
-  items: { postId: string; status: "DELETED" | "FAILED" }[];
-};

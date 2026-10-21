@@ -499,7 +499,6 @@ function CommunityDetail() {
           pending={removeCommunity.isPending}
           onConfirm={() => removeCommunity.mutate()}
         />
-
         <CommunityChannels communityId={community.id} joined={isMember} />
 
         {isMember && (

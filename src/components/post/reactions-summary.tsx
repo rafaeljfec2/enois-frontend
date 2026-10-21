@@ -6,7 +6,7 @@ import { REACTION_EMOJIS } from "@/constants/reaction-emojis";
 import { usePostCardStore } from "@/stores/post-card.store";
 import { texts } from "@/texts";
 import type { ReactionTab } from "@/types/application/reaction/reaction-tab";
-import type { PostIdProps } from "@/types/components/post/post-id-props";
+import type { ReactionsSummaryProps } from "@/types/components/post/reactions-summary-props";
 
 import { reactionsQueryOptions } from "@/lib/reactions/query-options";
 import { sortReactionTabsStable } from "@/lib/reactions/summary";
@@ -20,16 +20,20 @@ import { cn } from "@/lib/utils";
  * outra troca. Sem card no store (o blog monta o card num efeito do PostActions) a pílula vira
  * texto, para não existir alvo de clique que não tem onde gravar.
  */
-export function ReactionsSummary({ postId }: PostIdProps) {
+export function ReactionsSummary({ postId, initialSummary }: ReactionsSummaryProps) {
   const card = usePostCardStore((state) => state.cards[postId]);
   const reactionStatus = card?.reactionStatus ?? null;
-  const { data } = useQuery(reactionsQueryOptions(postId));
+  // Com o resumo vindo do feed, nada é buscado: o cache só existe depois de reagir ou abrir o
+  // diálogo (aí ele manda). Sem resumo (blog, resposta antiga), o card busca como antes.
+  const hasInitialSummary = initialSummary != null;
+  const { data } = useQuery({ ...reactionsQueryOptions(postId), enabled: !hasInitialSummary });
+  const summary = data?.summary ?? initialSummary ?? {};
   const { toggle, isPending } = usePostReaction(postId);
 
   // A ordem fica no ref: o resumo é otimista, então reordenar a cada clique moveria a pílula no
   // meio do toque. Só a entrada de um tipo novo (ou o primeiro load) reordena por contagem.
   const tabsRef = useRef<ReactionTab[]>([]);
-  const tabs = sortReactionTabsStable(tabsRef.current, data?.summary ?? {});
+  const tabs = sortReactionTabsStable(tabsRef.current, summary);
   tabsRef.current = tabs;
 
   if (tabs.length === 0) return null;
@@ -42,18 +46,23 @@ export function ReactionsSummary({ postId }: PostIdProps) {
         const mine = reactionStatus === type;
         const emoji = REACTION_EMOJIS[type] ?? type;
         const pillClassName = cn(
-          "inline-flex h-7 items-center gap-1.5 whitespace-nowrap rounded-full border px-2.5 text-xs transition-colors",
+          "inline-flex h-7 items-center gap-1.5 whitespace-nowrap rounded-full border px-2.5 text-xs leading-none transition-colors",
           mine
             ? "border-[#8b5cf6]/40 bg-[#8b5cf6]/15 text-[#c4b5fd] hover:bg-[#8b5cf6]/25"
             : "border-white/10 bg-white/[0.06] text-text-subtle hover:bg-white/10",
         );
         const content = (
           <>
-            <span className={cn("text-base leading-none", !mine && "grayscale-[0.3] opacity-80")}>
+            <span
+              className={cn(
+                "inline-flex h-4 items-center justify-center text-base leading-none",
+                !mine && "grayscale-[0.3] opacity-80",
+              )}
+            >
               {emoji}
             </span>
 
-            <span className="tabular-nums">{count}</span>
+            <span className="tabular-nums leading-none">{count}</span>
           </>
         );
 

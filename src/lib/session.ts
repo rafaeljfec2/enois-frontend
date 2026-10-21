@@ -1,15 +1,8 @@
-import type { AuthUser } from "@/types/application/auth/auth-user";
+import type { SessionPayload } from "@/types/application/auth/session-payload";
 
+import { setAuthHint } from "./auth-hint";
 import { resetSessionScopedData } from "./query-client";
 import { renewSessionKey } from "./session-key";
-
-type SessionPayload = {
-  token: string;
-  refreshToken?: string | null;
-  expiresAt?: string | null;
-  refreshExpiresAt?: string | null;
-  user?: AuthUser;
-};
 
 /**
  * Guarda a sessão no mesmo formato em todo lugar (login, cadastro confirmado e retorno do OAuth).
@@ -30,6 +23,7 @@ export function storeSession({
   if (expiresAt) localStorage.setItem("session_expires_at", expiresAt);
   if (refreshExpiresAt) localStorage.setItem("refresh_expires_at", refreshExpiresAt);
   if (user) localStorage.setItem("current_user", JSON.stringify(user));
+  setAuthHint();
   if (previousToken !== token) {
     renewSessionKey();
     resetSessionScopedData();

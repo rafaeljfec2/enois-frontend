@@ -1,3 +1,22 @@
+/**
+ * Data do evento ("2026-10-23") em português curto. Lida em UTC de propósito: a data vem sem fuso
+ * e, lida no fuso local, "2026-10-23" virava 22 de outubro para quem está a oeste de Greenwich.
+ */
+function formatEventDate(date: string): string {
+  const parsed = new Date(`${date}T00:00:00Z`);
+  if (Number.isNaN(parsed.getTime())) return date;
+  const sameYear = parsed.getUTCFullYear() === new Date().getFullYear();
+  return parsed
+    .toLocaleDateString("pt-BR", {
+      day: "numeric",
+      month: "short",
+      year: sameYear ? undefined : "numeric",
+      timeZone: "UTC",
+    })
+    .replace(/\./g, "")
+    .replace(/ de /g, " ");
+}
+
 const common = {
   enter: "Entrar",
   createAccount: "Criar conta",
@@ -239,7 +258,7 @@ export const texts = {
     themeSearchEmpty: "Nenhum tema com esse nome.",
     categoryAll: "Todas",
     categoryCasa: "Coleções da casa",
-    categoryJogos: "Save points",
+    categoryJogos: "Pontos de save",
     categoryMaquinas: "Máquinas antigas",
     categoryPapel: "Papel e tinta",
     categoryRetro: "Sistema retrô",
@@ -299,11 +318,14 @@ export const texts = {
     tabs: {
       new: "Novas",
       history: "Histórico",
+      requests: "Solicitações",
     },
     emptyNew: "Nenhuma notificação nova.",
     emptyHistory: "Nenhum histórico ainda.",
+    emptyRequests: "Nenhuma solicitação pendente.",
     markRead: "Lida",
     accept: "Aceitar",
+    reject: "Recusar",
     unreadLabel: (count: number) =>
       `${count} ${count === 1 ? "notificação não lida" : "notificações não lidas"}`,
     openActorProfile: (name: string) => `Abrir o perfil de ${name || "quem interagiu"}`,
@@ -335,13 +357,19 @@ export const texts = {
   auth: {
     hero: {
       eyebrow: "Networking com propósito",
-      quote: '"Encontrei aqui as conversas que mudaram minha carreira."',
-      person: "Marina Rocha",
-      role: "Engenheira Sênior · Nubank",
-      stats: [
-        { value: "120k+", label: "Profissionais" },
-        { value: "2.8k", label: "Mentores ativos" },
-        { value: "640", label: "Comunidades" },
+      // A frase e a TESE do produto (a mesma da landing), nao um depoimento: antes era uma
+      // citacao atribuida a uma pessoa que nao existe, com o nome de uma empresa real.
+      quote: '"Uma rede social não precisa viver da sua atenção."',
+      // Numeros REAIS: vem de /stats/community (publico, cache de ~10 min no servidor). Antes
+      // eram fixos no texto ("120k+ profissionais", "2.8k mentores", "640 comunidades") — a rede
+      // tem 2.275 contas, entao o painel afirmava um numero que o produto nao tem. A landing ja
+      // usava o contador de verdade; aqui era o unico lugar que ainda mentia.
+      stats: (activeUsers: number, totalUsers: number, windowDays: number) => [
+        {
+          value: activeUsers.toLocaleString("pt-BR"),
+          label: `ativos nos últimos ${windowDays} dias`,
+        },
+        { value: totalUsers.toLocaleString("pt-BR"), label: "contas na plataforma" },
       ],
     },
     signupClosed: {
@@ -509,6 +537,10 @@ export const texts = {
     },
     verify: {
       title: "Confirmando e-mail · Énóis",
+      confirmTitle: "Confirme seu e-mail",
+      confirmDescription:
+        "Clique no botão para ativar sua conta. O link vale por 24 horas e só funciona uma vez.",
+      confirmButton: "Confirmar meu e-mail",
       verifying: "Confirmando seu e-mail...",
       doneTitle: "E-mail confirmado!",
       doneDescription: "Sua conta está ativa. Vamos te levar para o app.",
@@ -744,6 +776,9 @@ export const texts = {
       /** O perfil tem teto por seção; o que não coube fica claro em vez de falhar pela metade. */
       capReached:
         "Alguns itens não couberam: o perfil aceita até 10 experiências, 10 formações e 10 certificações.",
+      resumeButton: "Enviar o currículo",
+      resumeHint:
+        "Sem LinkedIn? Suba o currículo: o app lê o arquivo e mostra a mesma prévia antes de salvar. Vale PDF (até 10 MB e 20 páginas) ou .txt/.md. Se for DOC/DOCX, exporte em PDF no seu editor.",
     },
     menu: {
       trigger: "Menu da conta",
@@ -865,9 +900,9 @@ export const texts = {
     seo: {
       title: "Énóis, uma rede social feita de gente, não de atenção",
       description:
-        "Rede social gratuita para profissionais e comunidades: sem anúncios, sem planos pagos e com um feed que termina quando o conteúdo acaba. Conversas, mentoria, eventos e vagas.",
+        "Rede social gratuita feita por gente: conversas, trabalho, brincadeira e vizinhança no mesmo lugar. Sem anúncios, sem planos pagos e com um feed que termina quando o conteúdo acaba.",
       ogDescription:
-        "Sem anúncio, sem paywall e sem esteira infinita. Uma rede social em construção com as pessoas, e aberta para quem quiser ajudar.",
+        "Sem anúncio, sem paywall e sem esteira infinita. Uma rede humana em construção com as pessoas, e aberta para quem quiser ajudar.",
       ogImageAlt: "Identidade visual do Énóis com seu símbolo e slogan.",
     },
     /**
@@ -892,7 +927,7 @@ export const texts = {
       badge: "A rede é nossa",
       title: "Uma rede social não precisa viver da sua atenção.",
       description:
-        "O énóis é uma rede para profissionais e comunidades, um lugar para conversar, aprender e construir junto. Sem anúncios, sem planos pagos e sem nada tentando prender você: quem decide quando a visita acaba é você.",
+        "O énóis é uma rede humana: um lugar para conversar, trabalhar, aprender, brincar e construir junto. Sem anúncios, sem planos pagos e sem nada tentando prender você: quem decide quando a visita acaba é você.",
       join: "Entrar no énóis",
       proposal: "Conhecer a proposta",
       facts: {
@@ -921,6 +956,7 @@ export const texts = {
         "O que existe é para todo mundo: sem plano pago esperando na esquina.",
         "O feed termina quando o conteúdo acaba, e diz isso na sua cara.",
         "Gente de verdade moderando, com regras escritas antes de qualquer punição.",
+        "A rede é humana antes de ser profissional: a foto do almoço e a vaga da empresa cabem no mesmo perfil.",
       ],
     },
     principles: {
@@ -968,27 +1004,59 @@ export const texts = {
         {
           label: "Conversas",
           items: [
-            "Publicações em vários tipos, de pergunta rápida a artigo com até 4.000 caracteres",
-            "Páginas em HTML/CSS publicadas como post, com player embutido",
-            "Comentários com imagem e GIF, reações e edição",
-            "Comunidades com capa própria, feita de foto ou HTML/CSS",
+            "Publicações em vários tipos: pergunta, artigo, projeto, página, notícia, tutorial, oportunidade, avaliação e divertimento",
+            "Mais de trinta assuntos para marcar do que cada post é",
+            "Comentários com imagem, GIF e áudio, com reações, edição e respostas aninhadas",
+            "Menções, salvos e a opção de ver só o que você ainda não tocou",
+            "Páginas em HTML e CSS publicadas como post, com player de vídeo e áudio",
           ],
         },
         {
-          label: "Trabalho e aprendizado",
+          label: "Comunidades e grupos",
           items: [
-            "Vagas publicadas aqui e captadas de fontes públicas (Remotive, Jobicy, RemoteOK, Himalayas)",
+            "Comunidades com capa própria, feita de foto ou de HTML e CSS",
+            "Canais privados por assunto, fora de todos os feeds",
+            "Grupos com feed, tópicos e moderação em camadas",
+            "Post fixado, denúncia e regras públicas em toda parte",
+          ],
+        },
+        {
+          label: "Trabalho e estudo",
+          items: [
+            "Vagas publicadas aqui e vindas de fontes públicas (Remotive, Jobicy, RemoteOK, Himalayas)",
             "Candidatura com triagem de quem publicou a vaga",
+            "Empresas com perfil próprio e projetos de comunidade",
             "Mentoria com agenda de sessões",
             "Eventos online, presenciais ou híbridos, com confirmação",
+            "Currículo em PDF no perfil, que viaja com a candidatura",
           ],
         },
         {
-          label: "Sua conta",
+          label: "Brincadeira e criação",
           items: [
-            "Perfil e publicações com link público, abrem sem login",
-            "Busca por pessoas, comunidades, vagas, eventos e mentores",
-            "Salvos, bloqueios e denúncias que você acompanha",
+            "Jogos da comunidade, jogáveis no navegador, com avaliações e comentários",
+            "Três jogos por dia: Palavras, Labirinto e Blocos, com prêmio em faíscas",
+            "Loja de aparências, com molduras animadas de avatar",
+            "Marketplace de temas e conteúdos, com o autor no catálogo",
+            "Projetos de comunidade, com página própria e ciclo de revisão",
+          ],
+        },
+        {
+          label: "Gente e conta",
+          items: [
+            "Perfil e publicações com link público, que abrem sem login",
+            "Bio, capa e páginas em HTML e CSS escritos por você",
+            "Busca por pessoas, comunidades, vagas, eventos e jogos",
+            "Conexões, pedidos, salvos, bloqueios e denúncias que você acompanha",
+            "Mensagens diretas e de comunidade, com imagem, GIF e áudio",
+            "Notificações no app e no celular",
+          ],
+        },
+        {
+          label: "O dinheiro é interno",
+          items: [
+            "Faíscas: a moeda circula entre as pessoas, sem dinheiro real",
+            "Carteira com extrato, transferências instantâneas e resgate em bens",
           ],
         },
       ],
@@ -1034,7 +1102,7 @@ export const texts = {
     securityNote: {
       eyebrow: "Aviso a quem testa segurança",
       title: "Testem na sandbox, não contra a nossa API.",
-      body: "Pedimos, por favor, que os testes de segurança sejam realizados em ambiente de sandbox, e não contra a nossa API. Temos os repositórios abertos — tudo é 100% open source — e damos autorização apenas para testes realizados em ambiente simulado. Todo teste executado contra a nossa API será encarado como crime cibernético e denunciado como tal.",
+      body: "Pedimos, por favor, que os testes de segurança sejam realizados em ambiente de sandbox, e não contra a nossa API. Temos os repositórios abertos, tudo é 100% open source, e damos autorização apenas para testes realizados em ambiente simulado. Todo teste executado contra a nossa API será encarado como crime cibernético e denunciado como tal.",
       closing:
         "Somos uma rede social sem fins lucrativos que quer ser melhor junto da comunidade. Pedimos que não tentem destruir ideias livres e gratuitas que apenas querem trazer o bem.",
       repoLink: "Ver os repositórios abertos",
@@ -1043,7 +1111,7 @@ export const texts = {
       copyright: (year: number) =>
         `© ${year} Énóis · Uma rede feita com as pessoas, todos os dias.`,
       tagline:
-        "Uma rede social gratuita para profissionais e comunidades, sem anúncios, sem paywall, em construção com quem usa.",
+        "Uma rede social gratuita feita por gente, sem anúncios, sem paywall, em construção com quem usa.",
       sectionsLabel: "Nesta página",
       projectLabel: "O projeto",
       privacy: "Privacidade",
@@ -1068,7 +1136,7 @@ export const texts = {
       "O énóis é um projeto independente, comunitário e sem fins lucrativos. Leia o aviso de independência em relação a outras organizações e marcas de nome semelhante.",
     title: "Sobre o énóis",
     intro:
-      "Uma rede social gratuita para profissionais e comunidades, sem anúncios, sem paywall, em construção com quem usa.",
+      "Uma rede social gratuita feita por gente, sem anúncios, sem paywall, em construção com quem usa.",
     independenceTitle: "Projeto independente",
     disclaimer:
       "O énóis é um projeto independente, comunitário e sem fins lucrativos, desenvolvido com o objetivo de promover conexões e interações entre pessoas. Não possuímos vínculo, afiliação ou associação com outras organizações ou marcas de nome semelhante, salvo quando expressamente informado.",
@@ -1151,6 +1219,7 @@ export const texts = {
       corporateDestination: (name: string) =>
         `Publicando como ${name} — esta publicação vai para o feed corporativo.`,
     },
+    tabsLabel: "Filtrar publicações",
     tabs: {
       forYou: "Para você",
       news: "Notícias",
@@ -1161,8 +1230,13 @@ export const texts = {
       all: "Tudo",
       following: "Seguindo",
       discussions: "Discussões",
+      /** O oposto de "Discussoes": aqui entram os posts em que a pessoa ainda nao reagiu nem comentou. */
+      unseen: "Ainda não vi",
       projects: "Projetos",
       corporate: "Corporativo",
+      /** Legenda do seletor de tipo de feed (as abas ficam recolhidas atrás do botao). */
+      type: "Tipo de feed",
+      openList: "Escolher o tipo de feed",
     },
     sidebar: {
       connections: "Conexões",
@@ -1496,7 +1570,7 @@ export const texts = {
       title: "Bio em HTML/CSS",
       label: "HTML/CSS da bio",
       description:
-        "Escreva sua bio com HTML e CSS: imagens, vídeo e áudio por link https tocam dentro dela. Scripts, formulários e requisições externas não rodam, e nada aqui alcança a conta de quem visita.",
+        "Escreva sua bio com HTML e CSS: imagens, vídeo e áudio por link https tocam dentro dela. Scripts, formulários e requisições externas não rodam, e nada aqui alcança a conta de quem visita. Fundo e texto acompanham o tema do app com var(--background), var(--foreground), light-dark() ou prefers-color-scheme. Uma cor escrita na mão, como #0b0b12 ou #fff, fica como você pintou.",
       placeholder: "Cole ou escreva o HTML da sua bio...",
       empty: "Cole um HTML para ver a pré-visualização.",
       frameTitle: "Bio em HTML do perfil",
@@ -1700,6 +1774,69 @@ export const texts = {
    * O texto diz o que é verdade: o Énóis NÃO hospeda o jogo — ele roda onde o criador publicou, e
    * aqui é o convite. Quando o site de origem proíbe quadro, a tela explica em vez de fingir falha.
    */
+  marketplace: {
+    purchaseConfirmed: "Compra confirmada",
+    purchaseHeld:
+      "As faíscas ficam retidas com segurança até você confirmar que recebeu o conteúdo. Se algo der errado, o reembolso devolve tudo.",
+    keepShopping: "Continuar comprando",
+  },
+  projects: {
+    seoTitle: "Projetos da comunidade · Énóis",
+    seoDescription:
+      "Projetos criados por quem está aqui: apps, sites, pesquisas, arte e experimentos.",
+    title: "Projetos da comunidade",
+    description:
+      "Espaço separado dos jogos para mostrar o que você construiu: link do projeto, repositório, categoria e tags. Envio passa pela moderação.",
+    searchPlaceholder: "Buscar projeto, criador ou tag",
+    orderRecent: "Recentes",
+    orderTitle: "A-Z",
+    submit: "Enviar projeto",
+    mine: "Meus projetos",
+    loadMore: "Carregar mais",
+    empty: "Nenhum projeto encontrado.",
+    emptyHint: "Você fez algo? Envie o link e ele aparece aqui depois da revisão.",
+    loading: "Carregando projetos…",
+    error: "Não foi possível carregar os projetos agora.",
+    openProject: "Abrir projeto",
+    openRepo: "Ver repositório",
+    visit: "Visitar",
+    notFound: "Projeto não encontrado.",
+    back: "Voltar",
+    submittedBy: (name: string) => `por ${name}`,
+    status: {
+      SUBMITTED: "Em revisão",
+      PUBLISHED: "Publicado",
+      REJECTED: "Recusado",
+      SUSPENDED: "Suspenso",
+    },
+    editor: {
+      createTitle: "Enviar projeto",
+      editTitle: "Editar projeto",
+      title: "Título do projeto",
+      shortDescription: "Resumo curto (aparece no card)",
+      description: "Descrição do projeto",
+      url: "Link do projeto (https://...)",
+      repoUrl: "Link do repositório (opcional)",
+      tags: "Tags separadas por vírgula",
+      category: "Categoria (ex.: WEB, DADOS, ARTE)",
+      cover: "URL da capa (opcional)",
+      slug: "Endereço na URL (opcional)",
+      save: "Salvar",
+      saving: "Salvando…",
+      cancel: "Cancelar",
+      sent: "Projeto enviado para revisão.",
+      updated: "Projeto atualizado.",
+      error: "Não foi possível salvar o projeto.",
+    },
+    panel: {
+      title: "Meus projetos",
+      description: "Envie, edite, reenvie recusados e apague seus projetos.",
+      resubmit: "Reenviar",
+      remove: "Excluir",
+      removed: "Projeto excluído.",
+      reviewNote: (note: string) => `Recusado: ${note}`,
+    },
+  },
   games: {
     title: "Jogos",
     description:
@@ -1940,8 +2077,10 @@ export const texts = {
   communities: {
     seoTitle: "Comunidades · Énóis",
     title: "Comunidades",
-    description: "Encontre grupos profissionais, fóruns temáticos e círculos de mentoria.",
+    description: "Encontre comunidades de gente, fóruns temáticos e círculos de mentoria.",
+    topicsLabel: "Categorias",
     searchPlaceholder: "Pesquisar comunidades",
+    empty: "Nenhuma comunidade encontrada.",
     createCommunity: "Criar comunidade",
     myTitle: "Suas comunidades",
     created: "Comunidade criada.",
@@ -2092,7 +2231,8 @@ export const texts = {
     ],
     hostedBy: (host: string) => `por ${host}`,
     watchLive: "Assistir ao vivo",
-    dateTime: (date: string, time: string) => `${date} · ${time}`,
+    /** "23 out · 08:00"; o ano só aparece quando não é o atual ("31 dez 2029 · 23:59"). */
+    dateTime: (date: string, time: string) => `${formatEventDate(date)} · ${time}`,
     attend: "Confirmar presença",
     finished: "Encerrado",
     finishedHint:
@@ -2151,6 +2291,33 @@ export const texts = {
       communityFilterHint: "Vagas externas cadastradas pela comunidade, separadas dos agregadores.",
       applyByEmail: "Enviar candidatura",
     },
+    freelancePage: {
+      title: "Freelances",
+      description:
+        "Trabalhos pontuais com escopo fechado, prazo e faixa de valor. Qualquer pessoa com conta verificada pode publicar.",
+      create: "Publicar freela",
+      empty: "Nenhum freela aberto agora.",
+      emptyHint: "Publique o primeiro: escopo fechado, prazo e faixa de valor.",
+      budget: "Valor",
+      deadline: "Prazo",
+      scope: "Escopo fechado",
+      close: "Encerrar",
+      closed: "Freela encerrado.",
+      createTitle: "Publicar freela",
+      titleField: "Título do trabalho",
+      scopeField: "Escopo fechado (o que será entregue)",
+      budgetMin: "Valor mínimo (faíscas)",
+      budgetMax: "Valor máximo (faíscas)",
+      deadlineField: "Prazo",
+      submit: "Publicar",
+      invalid: "Preencha título, escopo, faixa de valor e prazo.",
+      error: "Não foi possível salvar o freela.",
+      saved: "Freela publicado.",
+    },
+    freelanceTitle: "Freelances",
+    freelanceSeoTitle: "Freelances · Énóis",
+    freelanceDescription:
+      "Trabalhos pontuais publicados pela comunidade: qualquer pessoa com conta verificada pode publicar, com a mesma proteção antifraude das vagas.",
     seoTitle: "Vagas · Énóis",
     title: "Oportunidades",
     description: "Vagas filtradas por nível, localização, tipo e habilidades.",
@@ -2160,7 +2327,12 @@ export const texts = {
       location: "Local:",
       type: "Tipo:",
       locations: ["Remoto", "Híbrido", "Presencial"],
+      /** O backend guarda o código (JUNIOR, INTERN...); a tela mostra o nome em português. */
+      levels: { JUNIOR: "Júnior", MID: "Pleno", SENIOR: "Sênior", LEAD: "Liderança" },
+      types: { CLT: "CLT", PJ: "PJ", FREELANCE: "Freelance", INTERN: "Estágio" },
     },
+    /** Quantas habilidades o card da lista mostra antes do "+N". */
+    moreSkills: (count: number) => `+${count}`,
     searchPlaceholder: "Buscar vagas (ex.: java -estágio)",
     /** Ajuda da busca booleana: mostra a sintaxe sem esconder o essencial. */
     searchHint:
@@ -2280,6 +2452,13 @@ export const texts = {
       verifiedOnly:
         "Para se candidatar é preciso ter a conta verificada (e-mail confirmado ou verificação em duas etapas).",
       verifyIdentity: "Verificar minha conta",
+      resumePrefill: "Preencher com meu currículo",
+      resumePrefillHint:
+        "Suba o currículo (PDF ou texto): o app sugere a mensagem e as respostas. O que ele não achar fica marcado para você preencher — revise antes de enviar.",
+      resumeReading: "Lendo o currículo...",
+      resumeFilled: (filled: number, total: number) =>
+        `${filled} de ${total} campos preenchidos — revise e complete o resto.`,
+      resumeNoSuggestion: "preencha aqui",
     },
     author: {
       label: "Publicado por",
@@ -2823,8 +3002,10 @@ export const texts = {
     tabs: {
       reports: "Denúncias",
       games: "Jogos",
+      projects: "Projetos",
       support: "Suporte",
       issues: "Issues",
+      history: "Histórico",
       appeals: "Recursos",
       disputes: "Contestações",
       applications: "Candidaturas",
@@ -2901,6 +3082,21 @@ export const texts = {
         DENUNCIAS_CONTRA: "Denúncias contra",
       } as Record<string, string>,
     },
+    projects: {
+      title: "Projetos esperando revisão",
+      description:
+        "Projetos enviados pela comunidade. Aprovar publica em /projetos; recusar exige um motivo que o criador vai ler.",
+      empty: "Nenhum projeto na fila de revisão.",
+      noCategory: "sem categoria",
+      openProject: "Abrir projeto",
+      openRepo: "Repositório",
+      notePlaceholder: "Motivo (obrigatório para recusar)",
+      approve: "Aprovar",
+      reject: "Recusar",
+      approved: "Projeto aprovado: já está em /projetos.",
+      rejected: "Projeto recusado: o motivo vai para o painel do criador.",
+      error: "Não foi possível revisar o projeto.",
+    },
     games: {
       title: "Jogos esperando revisão",
       empty: "Nenhum jogo na fila de revisão.",
@@ -2915,6 +3111,9 @@ export const texts = {
     support: {
       title: "Tickets de suporte",
       issuesTitle: "Issues da comunidade",
+      historyDescription:
+        "Issues e tickets já concluídos. A fila ativa mostra apenas o que ainda precisa de atenção.",
+      historyEmpty: "Nada no histórico ainda.",
       description:
         "Pedidos abertos pelo app, separados por categoria. Mover para em andamento ou resolver registra a triagem.",
       empty: "Nenhum ticket nesta categoria.",
@@ -2959,7 +3158,7 @@ export const texts = {
       locked: (count: number, min: number) =>
         `Hoje são ${count} moderador(es); a votação de punição abre a partir de ${min}. Antes disso, somente administradores podem punir.`,
       target: "Username do usuário",
-      targetPlaceholder: "ex.: aminadojava",
+      targetPlaceholder: "ex.: ana-silva",
       type: "Tipo de punição",
       reason: "Motivo",
       reasonPlaceholder: "Descreva o que aconteceu e por que a punição é necessária.",
@@ -3041,6 +3240,12 @@ export const texts = {
     jobsCount: (n: number) => (n === 1 ? "1 vaga aberta" : `${n} vagas abertas`),
     viewJobs: "Ver vagas",
     empty: "Nenhuma empresa encontrada.",
+  },
+  /** Campo de data digitável (dd/mm/aaaa). */
+  dateInput: {
+    placeholder: "dd/mm/aaaa",
+    invalid: "Digite uma data válida no formato dd/mm/aaaa.",
+    outOfRange: "Confira a data: ela está fora do intervalo permitido.",
   },
   /** Diálogo global de regularização da data de nascimento (ECA Digital). */
   /** Diálogo global de regularização da data de nascimento (ECA Digital). */
@@ -3301,11 +3506,11 @@ export const texts = {
       "As regras do Énóis: o que é bem-vindo, o que não é tolerado, como funcionam as denúncias e as consequências.",
     title: "Diretrizes da comunidade",
     intro:
-      "O Énóis é uma rede profissional. O objetivo destas diretrizes é manter um ambiente onde profissionais constroem reputação de forma honesta e se tratam com respeito.",
+      "O Énóis é uma rede humana. O objetivo destas diretrizes é manter um ambiente onde as pessoas constroem reputação de forma honesta e se tratam com respeito.",
     welcomeTitle: "O que é bem-vindo",
     welcome: [
-      "Conteúdo profissional: experiências de carreira, oportunidades de trabalho, conhecimento técnico e apoio entre profissionais.",
-      "Opiniões e debate, inclusive críticas fortes, desde que sobre ideias, empresas e trabalho — não contra a pessoa.",
+      "Conteúdo de qualquer área: o que você sabe, o que procura e o que quer construir com gente que te entende.",
+      "Opiniões e debate, inclusive críticas fortes, desde que sobre ideias, empresas e trabalho, e não contra a pessoa.",
       "Publicação honesta sobre quem você é e o que faz.",
     ],
     zeroToleranceTitle: "Zero tolerância",
@@ -3345,7 +3550,7 @@ export const texts = {
 
   post: {
     seoTitle: "Publicação · Énóis",
-    seoDescription: "Veja esta publicação no Énóis — rede profissional gratuita, sem anúncios.",
+    seoDescription: "Veja esta publicação no Énóis — rede humana gratuita, sem anúncios.",
     back: "Voltar",
     loading: "Carregando publicação...",
     notFound: "Publicação não encontrada.",
@@ -3375,12 +3580,12 @@ export const texts = {
     terms: {
       seoTitle: "Termos de Uso · Énóis",
       seoDescription:
-        "Termos de uso da rede profissional Énóis — regras de uso, conduta, conteúdo e responsabilidades.",
+        "Termos de uso da rede humana Énóis — regras de uso, conduta, conteúdo e responsabilidades.",
       title: "Termos de Uso",
       sections: [
         {
           title: "1. Aceitação dos termos e idade mínima",
-          text: 'Ao criar uma conta ou usar qualquer funcionalidade da plataforma Énóis ("plataforma"), você concorda com estes Termos de Uso e com a Política de Privacidade. Se não concordar com qualquer parte deles, não utilize a plataforma.\n\nA plataforma é destinada exclusivamente a pessoas com 18 anos ou mais, por se tratar de uma rede profissional. Ao criar a conta, você declara e confirma ser maior de idade, e esse aceite é registrado com data e hora.',
+          text: 'Ao criar uma conta ou usar qualquer funcionalidade da plataforma Énóis ("plataforma"), você concorda com estes Termos de Uso e com a Política de Privacidade. Se não concordar com qualquer parte deles, não utilize a plataforma.\n\nA plataforma é destinada exclusivamente a pessoas com 18 anos ou mais, por exigência legal e por decisão da comunidade. Ao criar a conta, você declara e confirma ser maior de idade, e esse aceite é registrado com data e hora.',
         },
         {
           title: "2. Definições",
@@ -3412,7 +3617,7 @@ export const texts = {
         },
         {
           title: "9. Limitação de responsabilidade",
-          text: "Na máxima extensão permitida por lei, o Énóis não se responsabiliza por danos indiretos, incidentais ou consequenciais decorrentes do uso da plataforma, incluindo perda de dados, lucros ou oportunidades profissionais. A plataforma não garante resultados profissionais específicos, como contratações ou conexões.",
+          text: "Na máxima extensão permitida por lei, o Énóis não se responsabiliza por danos indiretos, incidentais ou consequenciais decorrentes do uso da plataforma, incluindo perda de dados, lucros ou oportunidades de trabalho. A plataforma não garante resultados profissionais específicos, como contratações ou conexões.",
         },
         {
           title: "10. Encerramento",
@@ -3518,21 +3723,22 @@ export const texts = {
   root: {
     notFound: {
       code: "404",
-      title: "Page not found",
-      description: "The page you're looking for doesn't exist or has been moved.",
-      home: "Go home",
+      title: "Página não encontrada",
+      description: "A página que você procura não existe ou foi movida.",
+      home: "Voltar para o início",
     },
     error: {
-      title: "This page didn't load",
-      description: "Something went wrong on our end. You can try refreshing or head back home.",
-      retry: "Try again",
-      home: "Go home",
+      title: "Esta página não carregou",
+      description:
+        "Algo deu errado do nosso lado. Você pode tentar de novo ou voltar para o início.",
+      retry: "Tentar de novo",
+      home: "Voltar para o início",
     },
     seo: {
-      title: "Énóis · Networking profissional humano",
+      title: "Énóis · Rede humana",
       description:
-        "Plataforma de networking profissional com foco em conexões genuínas, mentoria, comunidades e desenvolvimento de carreira.",
-      ogDescription: "Construa relacionamentos profissionais reais — não apenas conexões.",
+        "Rede social feita por gente, com conversas, trabalho, brincadeira e vizinhança no mesmo lugar. Sem anúncios, sem planos pagos e sem nada prendendo você.",
+      ogDescription: "Construa relações de verdade, não apenas conexões.",
     },
   },
 

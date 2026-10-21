@@ -26,9 +26,9 @@ import {
 } from "lucide-react";
 
 import { groupsApi } from "@/lib/api";
-import { getSessionToken } from "@/lib/api-client";
 import { resolveCdnUrl } from "@/lib/api/media";
-import { getCurrentUserId } from "@/lib/current-user";
+import { useCurrentUser } from "@/lib/current-user";
+import { useIsAuthenticated } from "@/lib/use-auth";
 import { useMediaUpload } from "@/lib/use-media-upload";
 
 import { Button } from "@/components/ui/button";
@@ -65,7 +65,7 @@ function GrupoPage() {
   const { slug } = Route.useParams();
   const queryClient = useQueryClient();
   const { toast } = useToast();
-  const authenticated = Boolean(getSessionToken());
+  const authenticated = useIsAuthenticated();
   const [editOpen, setEditOpen] = useState(false);
 
   const {
@@ -453,7 +453,10 @@ function GroupPostItem({
   const [showComments, setShowComments] = useState(false);
   const [removeOpen, setRemoveOpen] = useState(false);
   const [reportOpen, setReportOpen] = useState(false);
-  const currentUserId = getCurrentUserId();
+  // Inscrito na query do /me: o proprio post do grupo so mostrava "excluir" depois que outra
+  // consulta redesenhava a tela.
+  const { data: currentUser } = useCurrentUser();
+  const currentUserId = currentUser?.id ?? null;
 
   const remove = useMutation({
     mutationFn: () => groupsApi.removePost(groupId, post.id),

@@ -25,6 +25,7 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { PageHeader } from "@/components/ui/page-header";
 
 import { AppContainer } from "@/components/app-container";
 
@@ -33,7 +34,6 @@ export const Route = createFileRoute("/eventos")({
     evento:
       typeof search.evento === "string" && search.evento.length > 0 ? search.evento : undefined,
   }),
-  beforeLoad: requireAuth,
   head: () => ({ meta: [{ title: texts.events.seoTitle }] }),
   component: Eventos,
 });
@@ -86,34 +86,35 @@ function Eventos() {
   return (
     <AppContainer>
       <div className="space-y-6">
-        <div className="surface-card flex flex-wrap items-center justify-between gap-3 p-4 sm:gap-4 sm:p-6">
-          <div>
-            <h1 className="text-2xl font-semibold tracking-tight">{texts.events.title}</h1>
+        <PageHeader
+          title={texts.events.title}
+          description={texts.events.description}
+          actions={
+            <Dialog open={open} onOpenChange={setOpen}>
+              <DialogTrigger asChild>
+                <Button className="rounded-full gap-1.5">
+                  <Plus className="h-4 w-4" />
 
-            <p className="mt-1 text-sm text-muted-foreground">{texts.events.description}</p>
-          </div>
+                  <>{texts.events.createEvent}</>
+                </Button>
+              </DialogTrigger>
 
-          <Dialog open={open} onOpenChange={setOpen}>
-            <DialogTrigger asChild>
-              <Button className="rounded-full gap-1.5">
-                <Plus className="h-4 w-4" />
+              <DialogContent>
+                <DialogHeader>
+                  <DialogTitle>{texts.events.createEvent}</DialogTitle>
+                </DialogHeader>
 
-                <>{texts.events.createEvent}</>
-              </Button>
-            </DialogTrigger>
-
-            <DialogContent>
-              <DialogHeader>
-                <DialogTitle>{texts.events.createEvent}</DialogTitle>
-              </DialogHeader>
-
-              <CreateEventForm
-                onSave={(data) => createEvent.mutate(data)}
-                isPending={createEvent.isPending}
-              />
-            </DialogContent>
-          </Dialog>
-        </div>
+                <CreateEventForm
+                  onSave={(data) => {
+                    requireAuth();
+                    createEvent.mutate(data);
+                  }}
+                  isPending={createEvent.isPending}
+                />
+              </DialogContent>
+            </Dialog>
+          }
+        />
 
         <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
           {events.map((e) => {
@@ -211,7 +212,10 @@ function Eventos() {
                     <Button
                       className="mt-4 w-full rounded-full"
                       disabled={attend.isPending}
-                      onClick={() => attend.mutate(e.id)}
+                      onClick={() => {
+                        requireAuth();
+                        attend.mutate(e.id);
+                      }}
                     >
                       {texts.events.attend}
                     </Button>

@@ -2,9 +2,9 @@ import type { PageResponse } from "@/types/application/api/page-response";
 import type { StatusResponse } from "@/types/application/api/status-response";
 import type { Community } from "@/types/application/community/community";
 import type { CommunityChannel } from "@/types/application/community/community-channel";
-import type { CreateCommunityChannelInput } from "@/types/application/community/create-community-channel-input";
 import type { CommunityMembersResponse } from "@/types/application/community/community-members-response";
 import type { CommunityTopic } from "@/types/application/community/community-topic";
+import type { CreateCommunityChannelInput } from "@/types/application/community/create-community-channel-input";
 import type { CreateCommunityInput } from "@/types/application/community/create-community-input";
 import type { PostView } from "@/types/application/feed/post-view";
 

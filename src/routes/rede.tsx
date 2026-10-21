@@ -9,10 +9,11 @@ import type { StatProps } from "@/types/routes/network/stat-props";
 import { Check, Send, UserMinus, UserPlus, X } from "lucide-react";
 
 import { networkApi, profileApi } from "@/lib/api";
-import { getCurrentUserId } from "@/lib/current-user";
+import { useCurrentUser } from "@/lib/current-user";
 import { requireAuth } from "@/lib/require-auth";
 
 import { Button } from "@/components/ui/button";
+import { PageHeader } from "@/components/ui/page-header";
 
 import { AppContainer } from "@/components/app-container";
 import { UserAvatar } from "@/components/user-avatar";
@@ -25,7 +26,10 @@ export const Route = createFileRoute("/rede")({
 
 function Rede() {
   const queryClient = useQueryClient();
-  const currentUserId = getCurrentUserId();
+  // Inscrito na query do /me: sem isso, o pedido que a pessoa ENVIOU aparecia como recebido
+  // (com o botao errado) ate alguma outra consulta redesenhar a tela.
+  const { data: currentUser } = useCurrentUser();
+  const currentUserId = currentUser?.id ?? null;
   const [localStatus, setLocalStatus] = useState<Record<string, string>>({});
 
   const { data: usersData } = useQuery({
@@ -43,7 +47,10 @@ function Rede() {
   });
 
   const users = usersData?.items ?? [];
-  const pendingRequests = (requestsData?.items ?? []).filter((r) => r.status === "PENDING");
+  // Sem saber quem é a pessoa não dá para separar recebidas de enviadas: espera o `me`.
+  const pendingRequests = currentUserId
+    ? (requestsData?.items ?? []).filter((r) => r.status === "PENDING")
+    : [];
   const incomingRequests = pendingRequests.filter((r) => r.fromUserId !== currentUserId);
   const outgoingRequests = pendingRequests.filter((r) => r.fromUserId === currentUserId);
 
@@ -65,11 +72,7 @@ function Rede() {
   return (
     <AppContainer>
       <div className="space-y-6">
-        <div className="surface-card p-4 sm:p-6">
-          <h1 className="text-2xl font-semibold tracking-tight">{texts.network.title}</h1>
-
-          <p className="mt-1 text-sm text-muted-foreground">{texts.network.description}</p>
-
+        <PageHeader title={texts.network.title} description={texts.network.description}>
           <div className="mt-5 grid grid-cols-2 gap-3 sm:grid-cols-4">
             <Stat
               label={texts.network.stats.connections}
@@ -83,7 +86,7 @@ function Rede() {
             />
             <Stat label={texts.network.stats.suggestions} value={String(users.length)} />
           </div>
-        </div>
+        </PageHeader>
 
         {(incomingRequests.length > 0 || outgoingRequests.length > 0) && (
           <section>
@@ -217,7 +220,8 @@ function Rede() {
 }
 
 function RequestCard({ request, onAccept, onCancel }: RequestCardProps) {
-  const currentUserId = getCurrentUserId();
+  const { data: currentUser } = useCurrentUser();
+  const currentUserId = currentUser?.id ?? null;
   const isOutgoing = request.fromUserId === currentUserId;
   const targetUserId = isOutgoing ? request.toUserId : request.fromUserId;
 

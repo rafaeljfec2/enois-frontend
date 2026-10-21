@@ -65,6 +65,12 @@ Sem o `context-path=/api` o backend responde só em `/push/config`, `/notificati
 - `npm run preview`: serve o build para validacao local
 - `npm run lint`: executa o ESLint
 - `npm run format`: formata os arquivos com Prettier
+- `npm test`: roda os testes unitários com Vitest
+
+O CI (`.github/workflows/ci.yml`) roda os testes em toda PR.
+
+- `npm install` configura os hooks do git (`simple-git-hooks`): o pre-commit roda `eslint --fix` e `prettier` nos arquivos staged (lint-staged).
+- Em emergência, `git commit --no-verify` pula o hook.
 
 ## Deploy na Vercel
 

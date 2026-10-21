@@ -43,12 +43,13 @@ import { authApi, corporateApi, eventsApi, feedApi, networkApi, profileApi } fro
 import { clearFeedScroll, readFeedScroll } from "@/lib/feed-scroll-restoration";
 import { requireAuth } from "@/lib/require-auth";
 import { useMediaUpload } from "@/lib/use-media-upload";
+import { cn } from "@/lib/utils";
 
 import { Button } from "@/components/ui/button";
 import { EmptyState } from "@/components/ui/empty-state";
 import { Input } from "@/components/ui/input";
 import { LoadingState } from "@/components/ui/loading-state";
-import { Pill } from "@/components/ui/pill";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { useToast } from "@/components/ui/toast";
 
 import { ApoieCard } from "@/components/apoie-card";
@@ -60,6 +61,7 @@ import { MentionTextarea } from "@/components/mention-textarea";
 import { NightRestReminder } from "@/components/night-rest-reminder";
 import { PlatformSpacesCard } from "@/components/platform-spaces-card";
 import { PostCard } from "@/components/post-card";
+import { PostCardSkeletons } from "@/components/skeletons/post-card-skeletons";
 import { UserAvatar } from "@/components/user-avatar";
 
 /** Abas válidas da tela inicial (a URL carrega a escolhida). */
@@ -68,6 +70,7 @@ const HOME_TABS: HomeTab[] = [
   "ALL",
   "FOLLOWING",
   "RECENT",
+  "UNSEEN",
   "PROJECTS",
   "NEWS",
   "TUTORIALS",
@@ -76,6 +79,22 @@ const HOME_TABS: HomeTab[] = [
   "FUN",
   "CORPORATE",
 ];
+
+/** O rotulo de cada tipo de feed (a lista colapsada mostra o que esta escolhido). */
+const TAB_LABELS: Record<HomeTab, string> = {
+  FOR_YOU: texts.feed.tabs.forYou,
+  ALL: texts.feed.tabs.all,
+  FOLLOWING: texts.feed.tabs.following,
+  RECENT: texts.feed.tabs.discussions,
+  UNSEEN: texts.feed.tabs.unseen,
+  PROJECTS: texts.feed.tabs.projects,
+  NEWS: texts.feed.tabs.news,
+  TUTORIALS: texts.feed.tabs.tutorials,
+  OPPORTUNITIES: texts.feed.tabs.opportunities,
+  REVIEWS: texts.feed.tabs.reviews,
+  FUN: texts.feed.tabs.fun,
+  CORPORATE: texts.feed.tabs.corporate,
+};
 
 export const Route = createFileRoute("/feed")({
   beforeLoad: requireAuth,
@@ -175,6 +194,8 @@ function Home() {
     if (next === tab) return;
     void navigate({ search: { aba: next }, replace: true });
   };
+  // A lista de tipos de feed fica recolhida: o botao mostra o escolhido e abre a lista.
+  const [menuTipoFeed, setMenuTipoFeed] = useState(false);
   const {
     data: feedData,
     // Somente a PRIMEIRA carga mostra o esqueleto. `isFetching` tambem fica true ao paginar, e
@@ -471,6 +492,19 @@ function Home() {
               className="hidden"
             />
 
+            {/* O aviso da identidade profissional fica ACIMA da linha do avatar/campo: como item
+                de flex dentro dela, ele ocupava a largura toda, espremia o textarea e empurrava a
+                toolbar para a borda (o relato do perfil profissional "quebrado"). */}
+            {identity === "CORPORATE" && (
+              <div className="mb-2 flex items-center gap-2 rounded-xl bg-primary/10 px-3 py-2 text-xs text-text-strong">
+                <Briefcase className="h-3.5 w-3.5 shrink-0" />
+
+                <span className="min-w-0 break-words">
+                  {texts.feed.composer.corporateDestination(corporate?.name ?? "")}
+                </span>
+              </div>
+            )}
+
             <div className="flex items-start gap-3">
               <UserAvatar
                 frame={profileUser?.avatarFrame}
@@ -482,14 +516,6 @@ function Home() {
               {/* No modo pagina o campo de texto sai de cena: a pagina e o conteudo, e pedir um
                   texto "de post" junto faria a publicacao ser as duas coisas ao mesmo tempo. Quem
                   quiser uma legenda escreve dentro do proprio HTML. */}
-              {identity === "CORPORATE" && (
-                <div className="mb-2 flex w-full items-center gap-2 rounded-xl bg-primary/10 px-3 py-2 text-xs text-text-strong">
-                  <Briefcase className="h-3.5 w-3.5" />
-
-                  <span>{texts.feed.composer.corporateDestination(corporate?.name ?? "")}</span>
-                </div>
-              )}
-
               {!pageMode && (
                 <MentionTextarea
                   value={draft}
@@ -715,7 +741,9 @@ function Home() {
                 </div>
               )}
 
-              <div className="flex items-center gap-2">
+              {/* `ml-auto`: quando não cabe na mesma linha das opções, o Publicar desce e continua
+                  alinhado à direita, onde a pessoa procura — antes caía à esquerda, solto. */}
+              <div className="ml-auto flex items-center gap-2">
                 {/* O motivo da recusa fica na linha de baixo, inteiro: antes ele saía truncado em
                     200px ao lado do botão e a publicação recusada parecia "não fazer nada". */}
                 {publishError && (
@@ -859,57 +887,56 @@ function Home() {
             </section>
           )}
 
-          {/* Tabs */}
-          <div className="flex flex-wrap items-center gap-1.5">
-            <Pill active={tab === "FOR_YOU"} onClick={() => setTab("FOR_YOU")}>
-              {texts.feed.tabs.forYou}
-            </Pill>
+          {/* Tipo de feed: as opcoes ficam recolhidas atras do botao (sao muitas e ocupavam
+              tres linhas na tela). A legenda diz do que se trata; o botao mostra o que esta
+              escolhido e abre a lista. */}
+          <div className="flex items-center gap-2">
+            <span className="text-sm font-normal text-text-subtle">{texts.feed.tabs.type}</span>
 
-            <Pill active={tab === "ALL"} onClick={() => setTab("ALL")}>
-              {texts.feed.tabs.all}
-            </Pill>
+            <Popover open={menuTipoFeed} onOpenChange={setMenuTipoFeed}>
+              <PopoverTrigger asChild>
+                <button
+                  type="button"
+                  aria-label={texts.feed.tabs.openList}
+                  className="inline-flex items-center gap-1.5 rounded-full border border-border-soft bg-surface-card px-3 py-1.5 text-sm font-normal text-text-strong transition hover:border-primary hover:text-primary"
+                >
+                  {TAB_LABELS[tab]}
 
-            <Pill active={tab === "FOLLOWING"} onClick={() => setTab("FOLLOWING")}>
-              {texts.feed.tabs.following}
-            </Pill>
+                  <ChevronDown className="h-3.5 w-3.5 text-text-subtle" />
+                </button>
+              </PopoverTrigger>
 
-            <Pill active={tab === "RECENT"} onClick={() => setTab("RECENT")}>
-              {texts.feed.tabs.discussions}
-            </Pill>
-
-            <Pill active={tab === "PROJECTS"} onClick={() => setTab("PROJECTS")}>
-              {texts.feed.tabs.projects}
-            </Pill>
-
-            <Pill active={tab === "NEWS"} onClick={() => setTab("NEWS")}>
-              {texts.feed.tabs.news}
-            </Pill>
-
-            <Pill active={tab === "TUTORIALS"} onClick={() => setTab("TUTORIALS")}>
-              {texts.feed.tabs.tutorials}
-            </Pill>
-
-            <Pill active={tab === "OPPORTUNITIES"} onClick={() => setTab("OPPORTUNITIES")}>
-              {texts.feed.tabs.opportunities}
-            </Pill>
-
-            <Pill active={tab === "REVIEWS"} onClick={() => setTab("REVIEWS")}>
-              {texts.feed.tabs.reviews}
-            </Pill>
-
-            <Pill active={tab === "FUN"} onClick={() => setTab("FUN")}>
-              {texts.feed.tabs.fun}
-            </Pill>
-
-            {corporate?.exists && corporate.status === "ACTIVE" && (
-              <Pill active={tab === "CORPORATE"} onClick={() => setTab("CORPORATE")}>
-                {texts.feed.tabs.corporate}
-              </Pill>
-            )}
+              <PopoverContent align="start" className="w-56 p-1">
+                <div className="flex max-h-80 flex-col gap-0.5 overflow-y-auto">
+                  {HOME_TABS.filter(
+                    (opcao) =>
+                      opcao !== "CORPORATE" || (corporate?.exists && corporate.status === "ACTIVE"),
+                  ).map((opcao) => (
+                    <button
+                      key={opcao}
+                      type="button"
+                      onClick={() => {
+                        setTab(opcao);
+                        setMenuTipoFeed(false);
+                      }}
+                      aria-pressed={opcao === tab}
+                      className={cn(
+                        "rounded-lg px-3 py-2 text-left text-sm font-normal transition",
+                        opcao === tab
+                          ? "bg-primary-soft text-primary"
+                          : "text-text-subtle hover:bg-surface-2 hover:text-text-strong",
+                      )}
+                    >
+                      {TAB_LABELS[opcao]}
+                    </button>
+                  ))}
+                </div>
+              </PopoverContent>
+            </Popover>
           </div>
 
           <div className="space-y-4">
-            {feedLoading && <LoadingState />}
+            {feedLoading && <PostCardSkeletons />}
             {!feedLoading && feedPosts.map((p) => <PostCard key={p.id} post={p} feedTab={tab} />)}
 
             {!feedLoading && feedPosts.length === 0 && <EmptyState title={texts.feed.empty} />}
@@ -924,11 +951,11 @@ function Home() {
           </div>
         </div>
 
-        {/* Right rail */}
-        {/* O convite de doação fica no menu direito. */}
-        <ApoieCard />
-
-        <aside className="sticky top-20 hidden max-h-[calc(100vh-6rem)] space-y-4 overflow-y-auto lg:block">
+        {/* Right rail: TUDO num único filho do grid. O cartão de doação já foi um filho solto
+            aqui — ele esticava até a altura da coluna inteira e empurrava/escondia os outros
+            cartões (o que está acontecendo agora) para fora da dobra. */}
+        <aside className="sticky top-20 hidden max-h-[calc(100vh-6rem)] space-y-4 self-start overflow-y-auto scrollbar-on-hover lg:block">
+          <ApoieCard />
           <PlatformSpacesCard />
 
           {profileUser && (
