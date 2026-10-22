@@ -362,15 +362,16 @@ export const apiSections: ApiSection[] = [
         method: "GET",
         path: "/events",
         access: "public",
-        description: "Lista eventos (vitrine).",
+        description:
+          "Lista eventos (vitrine). Com sessão, attending reflete se o viewer confirmou presença.",
         response: `200 OK
-{"items":[{"id":"event_…","title":"…","date":"2029-12-31","time":"23:59","format":"ONLINE","attendees":2}]}`,
+{"items":[{"id":"event_…","title":"…","date":"2029-12-31","time":"23:59","format":"ONLINE","attendees":2,"attending":false,"expired":false}]}`,
       },
       {
         method: "GET",
         path: "/events/{eventId}",
         access: "public",
-        description: "Detalhe do evento.",
+        description: "Detalhe do evento (attending do viewer quando autenticado).",
       },
       { method: "POST", path: "/events", access: "auth", description: "Cria evento." },
       {
@@ -895,7 +896,7 @@ export const apiSections: ApiSection[] = [
     id: "servicos",
     title: "Serviços freelance (com escrow)",
     description:
-      "Duas faces: OFERTAR (o profissional publica o que faz, modelo Fiverr — teto de 5 abertas por conta) e PEDIR (a demanda publica o que precisa, com orçamento em faixa e entregáveis OBRIGATÓRIOS — a lição dos microprojetos). O contrato nasce HELD: entrega → aceite libera 90%; reembolso devolve 100%.",
+      "Duas faces: OFERTAR (o profissional publica o que faz, modelo Fiverr — teto de 5 abertas por conta) e PEDIR (a demanda publica o que precisa, com orçamento em faixa e entregáveis OBRIGATÓRIOS — a lição dos microprojetos). Em faíscas, o contrato nasce HELD: entrega → aceite libera 90% (10% de taxa); reembolso devolve 100%. Em reais, o pagamento é combinado direto entre as partes e o Énóis não cobra taxa.",
     endpoints: [
       {
         method: "GET",

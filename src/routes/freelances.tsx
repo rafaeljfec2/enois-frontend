@@ -1,11 +1,11 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 import { useInfiniteQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { createFileRoute } from "@tanstack/react-router";
 
 import { texts } from "@/texts";
 import type { FreelanceView } from "@/types/application/freelance/freelance-view";
-import { CalendarClock, Handshake, Plus, Sparkles } from "lucide-react";
+import { Banknote, CalendarClock, Handshake, Plus, Search, Sparkles } from "lucide-react";
 
 import { freelancesApi } from "@/lib/api";
 import { formatFaisca, parseFaiscaInput } from "@/lib/faisca";
@@ -29,13 +29,30 @@ export const Route = createFileRoute("/freelances")({
 
 const PAGE_SIZE = 24;
 
+/** Dinheiro é exibido em reais inteiros: 1500 → "R$ 1.500". */
+const money = (value: number) =>
+  value.toLocaleString("pt-BR", { style: "currency", currency: "BRL", maximumFractionDigits: 0 });
+
 function Freelances() {
   const authenticated = useIsAuthenticated();
   const [open, setOpen] = useState(false);
+  const [busca, setBusca] = useState("");
+  const [buscaAplicada, setBuscaAplicada] = useState("");
+
+  // Espera a pessoa parar de digitar: uma requisição por termo, não por tecla.
+  useEffect(() => {
+    const timer = setTimeout(() => setBuscaAplicada(busca.trim()), 300);
+    return () => clearTimeout(timer);
+  }, [busca]);
 
   const query = useInfiniteQuery({
-    queryKey: ["freelances"],
-    queryFn: ({ pageParam }) => freelancesApi.list({ limit: PAGE_SIZE, cursor: pageParam }),
+    queryKey: ["freelances", buscaAplicada],
+    queryFn: ({ pageParam }) =>
+      freelancesApi.list({
+        limit: PAGE_SIZE,
+        cursor: pageParam,
+        q: buscaAplicada || undefined,
+      }),
     initialPageParam: null as string | null,
     getNextPageParam: (last) => last.nextCursor,
   });
@@ -73,17 +90,46 @@ function Freelances() {
           )}
         </header>
 
+        <div className="relative">
+          <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-text-subtle" />
+          <Input
+            value={busca}
+            onChange={(event) => setBusca(event.target.value)}
+            placeholder={texts.jobs.freelancePage.searchPlaceholder}
+            aria-label={texts.jobs.freelancePage.searchPlaceholder}
+            maxLength={80}
+            className="pl-9"
+          />
+        </div>
+
         {query.isLoading ? (
           <LoadingState />
         ) : query.isError ? (
           <p className="text-sm text-destructive">{texts.jobs.freelancePage.error}</p>
         ) : items.length === 0 ? (
           <div className="surface-card">
-            <EmptyState
-              icon={Handshake}
-              title={texts.jobs.freelancePage.empty}
-              description={texts.jobs.freelancePage.emptyHint}
-            />
+            {buscaAplicada ? (
+              <EmptyState
+                icon={Search}
+                title={texts.jobs.freelancePage.searchEmpty}
+                description={texts.jobs.freelancePage.searchEmptyHint}
+              >
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="mt-1 w-auto rounded-full"
+                  onClick={() => setBusca("")}
+                >
+                  {texts.jobs.freelancePage.clearSearch}
+                </Button>
+              </EmptyState>
+            ) : (
+              <EmptyState
+                icon={Handshake}
+                title={texts.jobs.freelancePage.empty}
+                description={texts.jobs.freelancePage.emptyHint}
+              />
+            )}
           </div>
         ) : (
           <>
@@ -147,10 +193,17 @@ function FreelanceCard({ item }: { item: FreelanceView }) {
       <p className="line-clamp-4 whitespace-pre-line text-sm text-text-subtle">{item.scope}</p>
 
       <div className="mt-auto flex flex-wrap items-center gap-3 text-sm">
-        <span className="inline-flex items-center gap-1.5 font-semibold text-primary">
-          <Sparkles className="h-4 w-4" />
-          {formatFaisca(item.budgetMin)}–{formatFaisca(item.budgetMax)} faíscas
-        </span>
+        {item.paymentMethod === "CASH" ? (
+          <span className="inline-flex items-center gap-1.5 font-semibold text-growth">
+            <Banknote className="h-4 w-4" />
+            {money(item.budgetMin)}–{money(item.budgetMax)}
+          </span>
+        ) : (
+          <span className="inline-flex items-center gap-1.5 font-semibold text-primary">
+            <Sparkles className="h-4 w-4" />
+            {formatFaisca(item.budgetMin)}–{formatFaisca(item.budgetMax)} faíscas
+          </span>
+        )}
 
         <span className="inline-flex items-center gap-1.5 text-text-subtle">
           <CalendarClock className="h-4 w-4" />
@@ -178,6 +231,7 @@ function CreateFreelanceDialog({
   const [budgetMin, setBudgetMin] = useState("");
   const [budgetMax, setBudgetMax] = useState("");
   const [deadline, setDeadline] = useState("");
+  const [paymentMethod, setPaymentMethod] = useState<"FAISCAS" | "CASH">("FAISCAS");
 
   const min = parseFaiscaInput(budgetMin) ?? 0;
   const max = parseFaiscaInput(budgetMax) ?? 0;
@@ -196,6 +250,7 @@ function CreateFreelanceDialog({
         budgetMin: min,
         budgetMax: max,
         deadline,
+        paymentMethod,
       }),
     onSuccess: () => {
       toast(texts.jobs.freelancePage.saved, "success");
@@ -205,6 +260,7 @@ function CreateFreelanceDialog({
       setBudgetMin("");
       setBudgetMax("");
       setDeadline("");
+      setPaymentMethod("FAISCAS");
       onOpenChange(false);
     },
     onError: (error) =>
@@ -233,17 +289,46 @@ function CreateFreelanceDialog({
             maxLength={4000}
           />
 
+          <label className="block space-y-1 text-sm">
+            <span className="text-text-subtle">{texts.jobs.freelancePage.payment}</span>
+
+            <select
+              value={paymentMethod}
+              onChange={(event) => setPaymentMethod(event.target.value as "FAISCAS" | "CASH")}
+              aria-label={texts.jobs.freelancePage.payment}
+              className="h-10 w-full rounded-lg border border-border-soft bg-surface-card px-3 text-sm text-text-strong outline-none focus:border-primary"
+            >
+              <option value="FAISCAS">{texts.jobs.freelancePage.paymentFaiscas}</option>
+
+              <option value="CASH">{texts.jobs.freelancePage.paymentCash}</option>
+            </select>
+
+            <p className="text-xs text-text-subtle">
+              {paymentMethod === "CASH"
+                ? texts.jobs.freelancePage.paymentCashHint
+                : texts.jobs.freelancePage.paymentFaiscasHint}
+            </p>
+          </label>
+
           <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
             <Input
               value={budgetMin}
               onChange={(event) => setBudgetMin(event.target.value)}
-              placeholder={texts.jobs.freelancePage.budgetMin}
+              placeholder={
+                paymentMethod === "CASH"
+                  ? texts.jobs.freelancePage.budgetMinCash
+                  : texts.jobs.freelancePage.budgetMin
+              }
               inputMode="decimal"
             />
             <Input
               value={budgetMax}
               onChange={(event) => setBudgetMax(event.target.value)}
-              placeholder={texts.jobs.freelancePage.budgetMax}
+              placeholder={
+                paymentMethod === "CASH"
+                  ? texts.jobs.freelancePage.budgetMaxCash
+                  : texts.jobs.freelancePage.budgetMax
+              }
               inputMode="decimal"
             />
           </div>
