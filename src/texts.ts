@@ -837,6 +837,14 @@ export const texts = {
       noise:
         "Ei, respira! Bebe uma água, olha pela janela e volta quando quiser. Eu também preciso de uma pausa. 🌿",
       reminderCta: "Vou dar uma pausa",
+      liteTitle: "Modo lite",
+      liteDescription:
+        "Aparelho antigo, bateria curta ou internet ruim? O Modo lite desliga as animações, busca tudo em blocos maiores e segura os dados por mais tempo em cache: menos requisições e menos trabalho pro seu celular. A interface é a mesma.",
+      liteWhy:
+        "A gente pensou em otimização de recursos: aparelho antigo não é aparelho de segunda classe. Em vez de pedir um celular novo, o Énóis se adapta ao que você tem.",
+      forceMotionTitle: "Manter as animações neste aparelho",
+      forceMotionDescription:
+        "Seu sistema está pedindo pra reduzir movimento e a gente respeita: as molduras animadas e os efeitos ficam parados. Ligue aqui pra ver as animações mesmo assim.",
       nightRestTitle: "Lembrete de descanso durante a madrugada",
       nightRestDescription:
         "Receba uma mensagem de cuidado ao acessar o feed entre meia-noite e cinco da manhã.",
@@ -1424,6 +1432,12 @@ export const texts = {
       guidelines: "Veja as diretrizes da comunidade",
     },
     share: "Compartilhar",
+    repost: "Republicar",
+    reposted: "Republicado no seu perfil.",
+    alreadyReposted: "Você já republicou este post.",
+    repostError: "Não foi possível republicar agora.",
+    repostedFrom: (username: string | null | undefined) =>
+      username ? `Republicado de @${username}` : "Republicado",
     shareCopied: "Link da publicação copiado!",
     save: "Salvar publicação",
     unsave: "Remover dos salvos",
@@ -1643,6 +1657,14 @@ export const texts = {
       reputationLabel: "reputação",
       postsLabel: "publicações",
       connectionsLabel: "conexões",
+      followersLabel: "seguidores",
+      networkDialog: {
+        connectionsTitle: (name: string) => `Conexões de ${name}`,
+        followersTitle: (name: string) => `Seguidores de ${name}`,
+        emptyConnections: "Este perfil ainda não tem conexões públicas.",
+        emptyFollowers: "Este perfil ainda não tem seguidores.",
+        error: "Não foi possível carregar essa lista agora.",
+      },
       progressCaption: "Sua presença cresce com o que você compartilha e constrói por aqui.",
       badgesTitle: "Emblemas em destaque",
       badgeAlt: "Emblema do perfil",
@@ -1906,6 +1928,12 @@ export const texts = {
     emptyHint: "Você fez um jogo? Envie o link e ele aparece aqui depois da moderação.",
     loading: "Carregando…",
     error: "Não foi possível carregar o catálogo agora.",
+    /** Card "jogados hoje" no painel lateral do feed. */
+    today: {
+      title: "Jogados hoje",
+      subtitle: "As últimas 24 horas da comunidade.",
+      players: (count: number) => `${count} ${count === 1 ? "pessoa jogou" : "pessoas jogaram"}`,
+    },
     /** Página do criador. */
     developer: {
       notFound: "Criador não encontrado.",
