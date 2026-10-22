@@ -436,9 +436,9 @@ export const texts = {
     },
     seo: {
       authTitle: "Entrar ou criar conta · Énóis",
-      authDescription: "Acesse sua conta ou comece sua jornada profissional na Énóis.",
+      authDescription: "Acesse sua conta ou entre para o Énóis, uma rede humana feita por gente.",
       resetTitle: "Redefinir senha · Énóis",
-      resetDescription: "Defina uma nova senha para sua conta na Énóis.",
+      resetDescription: "Defina uma nova senha para sua conta no Énóis.",
     },
     captcha: {
       label: "Verificação de segurança",
@@ -1978,6 +1978,18 @@ export const texts = {
     description:
       "Feitos pela comunidade. O Énóis não hospeda: cada jogo roda no lugar onde o criador o publicou — aqui só o convite.",
     searchPlaceholder: "Buscar jogo, criador ou tag",
+    /** Categorias de jogo: a comunidade e os jogos diários (que eram uma página à parte). */
+    categoryCommunity: "Jogos da comunidade",
+    categoryDaily: "Jogos diários",
+    categoryHint: "Os jogos da comunidade e os desafios do dia moram no mesmo lugar.",
+    allGamesTitle: "Todos os jogos",
+    allGamesHint: "O catálogo inteiro da comunidade, para ir direto no que você procura.",
+    allGamesShow: "Ver o catálogo",
+    allGamesHide: "Esconder o catálogo",
+    dailyNeedsAccount: "Os desafios do dia são para quem tem conta",
+    dailyNeedsAccountHint:
+      "Entre para jogar palavras, labirinto e blocos — e concuir os três rende faíscas.",
+    dailyEnter: "Entrar para jogar",
     mostPlayed: "Mais jogados",
     alphabetical: "A-Z",
     loadMore: "Carregar mais",
@@ -2843,7 +2855,18 @@ export const texts = {
     mediaSpoilerActive: "Mídias marcadas como spoiler",
     conversationFallback: "Conversa",
     loadMoreConversations: "Carregar conversas antigas",
-    tabs: { all: "Todas", jobs: "Vagas", people: "Pessoas", archived: "Arquivadas" },
+    tabs: {
+      all: "Todas",
+      jobs: "Vagas",
+      services: "Serviços",
+      people: "Pessoas",
+      archived: "Arquivadas",
+    },
+    attachService: "Anexar o serviço que você presta",
+    attachServiceTitle: "Seu serviço",
+    attachServiceHint: "Escolha o serviço para mandar o link na conversa.",
+    serviceAttachment: "Serviço:",
+    noServices: "Você ainda não publicou nenhum serviço.",
     selectMode: "Selecionar",
     cancelSelection: "Cancelar",
     selectAll: "Selecionar tudo",
@@ -2867,6 +2890,13 @@ export const texts = {
       "Tudo sob a mesma base da API. As rotas de leitura pública não pedem credencial; as demais usam a sessão do Énóis no header X-Session-Token — o mesmo token que o app usa, obtido no login.",
     chromeIntroPublic:
       "Sem sessão você já consegue: ler post público e comentários, listar comunidades e o feed delas, vagas (com a origem), eventos, mentores, ranking, busca e estatísticas. Escrever (postar, comentar, reagir, denunciar…) pede a sessão de uma conta real.",
+    versionTitle: "Versão da API",
+    versionHint:
+      "Chame pelo caminho versionado: são as mesmas rotas, com o endereço que não muda quando o backend cresce.",
+    versionNote:
+      "A v1 responde exatamente como a rota sem versão: mesmo corpo, mesmo envelope de erro (código, mensagem e instante). Quem quiser a lista do que existe na versão pede GET /api/v1 — o índice é gerado pelo próprio servidor, então ele não mente.",
+    versionNow:
+      "Por enquanto a v1 acompanha a API atual: é o mesmo contrato com o endereço fixo. Quando o contrato for congelado, a v1 passa a ser a referência e a rota sem versão vira a que muda.",
     paginationTitle: "Paginação",
     errorsTitle: "Erros",
     idempotencyHint:
@@ -3745,7 +3775,7 @@ export const texts = {
 
   legal: {
     footer: {
-      copyright: (year: number) => `© ${year} Énóis · Rede profissional gratuita e humana`,
+      copyright: (year: number) => `© ${year} Énóis · Rede humana gratuita`,
       terms: "Termos de Uso",
       privacy: "Política de Privacidade",
       guidelines: "Diretrizes da Comunidade",
@@ -3922,13 +3952,16 @@ export const texts = {
 
   pwa: {
     themeColor: "#6746f5",
+    /** Descrição do manifesto do PWA: é a frase que o navegador mostra ao convidar a instalar. */
+    manifestDescription:
+      "Rede humana para conexões autênticas: conversa, comunidades, vagas, mentoria, brincadeira e construção junto.",
     offlineTitle: "Você está offline",
     offlineDescription:
       "Não conseguimos falar com o servidor. Verifique sua conexão e tente de novo.",
     offlineRetry: "Tentar novamente",
     install: {
       ariaLabel: "Instalar aplicativo",
-      title: "Instale o app da Énóis",
+      title: "Instale o app do Énóis",
       description: "Abra direto da tela inicial e receba notificações.",
       action: "Instalar",
       close: "Fechar convite de instalação",
